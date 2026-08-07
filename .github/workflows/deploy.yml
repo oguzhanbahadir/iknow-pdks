@@ -1,0 +1,44 @@
+name: Build & Push to Build Branch
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Build Next.js Application
+        run: npm run build
+
+      - name: Deploy Build Artifacts to 'build' Branch
+        uses: s0/git-publish-submenu-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          BRANCH: build
+          FOLDER: .
+          MESSAGE: 'chore: deploy build artifacts [skip ci]'
+
+      - name: Trigger Server Webhook
+        if: secrets.WEBHOOK_URL != ''
+        run: |
+          curl -X POST "${{ secrets.WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d '{"ref": "refs/heads/build", "event": "build_completed"}'
