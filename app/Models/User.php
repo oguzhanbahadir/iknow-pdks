@@ -27,6 +27,8 @@ class User extends Authenticatable
         'preferred_career_path',
         'tools_used',
         'experience_level',
+        'telegram_chat_id',
+        'telegram_username',
     ];
 
     protected $casts = [

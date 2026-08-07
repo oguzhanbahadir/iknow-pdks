@@ -3,10 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Services\TelegramService;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
+    protected TelegramService $telegramService;
+
+    public function __construct(TelegramService $telegramService)
+    {
+        $this->telegramService = $telegramService;
+    }
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -34,6 +42,7 @@ class TaskController extends Controller
                     'id' => (string) $t->assignedUser->id,
                     'fullName' => $t->assignedUser->full_name,
                     'email' => $t->assignedUser->email,
+                    'isTelegramConnected' => !empty($t->assignedUser->telegram_chat_id),
                 ] : null,
             ];
         });
@@ -62,12 +71,16 @@ class TaskController extends Controller
             'task_date' => $request->taskDate ?? now()->toDateString(),
         ]);
 
+        $task->load(['assignedUser', 'createdBy']);
+        $this->telegramService->sendTaskAssignedNotification($task);
+
         return response()->json(['success' => true, 'task' => $task], 201);
     }
 
     public function update(Request $request, $id)
     {
         $task = Task::findOrFail($id);
+        $oldAssignedUserId = $task->assigned_user_id;
 
         $task->update([
             'title' => $request->title ?? $task->title,
@@ -80,6 +93,11 @@ class TaskController extends Controller
             'actual_hours' => $request->actualHours ?? $task->actual_hours,
             'task_date' => $request->taskDate ?? $task->task_date,
         ]);
+
+        if ($request->has('assignedUserId') && (string)$request->assignedUserId !== (string)$oldAssignedUserId) {
+            $task->load(['assignedUser', 'createdBy']);
+            $this->telegramService->sendTaskAssignedNotification($task);
+        }
 
         return response()->json(['success' => true, 'task' => $task]);
     }

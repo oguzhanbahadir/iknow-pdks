@@ -25,6 +25,8 @@ class AuthController extends Controller
             'preferredCareerPath' => $user->preferred_career_path,
             'toolsUsed' => $user->tools_used ?? [],
             'experienceLevel' => $user->experience_level,
+            'isTelegramConnected' => !empty($user->telegram_chat_id),
+            'telegramUsername' => $user->telegram_username,
         ];
     }
 
