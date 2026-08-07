@@ -6,6 +6,7 @@
   "scripts": {
     "build": "npm run build --prefix frontend",
     "dev": "npm run dev --prefix frontend",
-    "serve": "cd backend && php artisan serve"
+    "serve": "cd backend && php artisan serve",
+    "deploy-backend": "git subtree push --prefix backend origin deploy"
   }
 }
