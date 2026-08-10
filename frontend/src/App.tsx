@@ -10,6 +10,7 @@ import TasksPage from './pages/TasksPage';
 import InternsPage from './pages/InternsPage';
 import InternDetailPage from './pages/InternDetailPage';
 import EffortPage from './pages/EffortPage';
+import OrientationPage from './pages/OrientationPage';
 import { User } from './types';
 import { getAuthHeaders } from './utils/api';
 
@@ -83,9 +84,12 @@ export default function App() {
               <Routes>
                 <Route path="/dashboard" element={<DashboardPage currentUser={currentUser} />} />
                 <Route path="/tasks" element={<TasksPage currentUser={currentUser} />} />
-                <Route path="/interns" element={<InternsPage currentUser={currentUser} />} />
-                <Route path="/interns/:id" element={<InternDetailPage />} />
+                <Route path="/team" element={<InternsPage currentUser={currentUser} />} />
+                <Route path="/team/:id" element={<InternDetailPage />} />
+                <Route path="/interns" element={<Navigate to="/team" replace />} />
+                <Route path="/interns/:id" element={<Navigate to="/team" replace />} />
                 <Route path="/effort" element={<EffortPage currentUser={currentUser} />} />
+                <Route path="/orientation" element={<OrientationPage currentUser={currentUser} />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </main>

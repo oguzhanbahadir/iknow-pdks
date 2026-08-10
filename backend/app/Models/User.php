@@ -22,6 +22,7 @@ class User extends Authenticatable
         'target_company',
         'company_integration_note',
         'is_onboarded',
+        'is_approved',
         'primary_domain',
         'known_skills',
         'preferred_career_path',
@@ -31,6 +32,7 @@ class User extends Authenticatable
 
     protected $casts = [
         'is_onboarded' => 'boolean',
+        'is_approved' => 'boolean',
         'known_skills' => 'array',
         'tools_used' => 'array',
     ];

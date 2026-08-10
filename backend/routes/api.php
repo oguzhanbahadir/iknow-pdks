@@ -7,6 +7,7 @@ use App\Http\Controllers\InternController;
 use App\Http\Controllers\CvController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\OrientationController;
 
 // Public Auth Routes
 Route::post('/auth/login', [AuthController::class, 'login']);
@@ -27,9 +28,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/interns/reset-password', [InternController::class, 'resetPassword']);
     Route::get('/interns/{id}', [InternController::class, 'show']);
     Route::post('/interns', [InternController::class, 'storeScoreOrIntegration']);
+    Route::delete('/interns/{id}', [InternController::class, 'destroy']);
+    Route::post('/interns/{id}/toggle-approve', [InternController::class, 'toggleApprove']);
 
     Route::post('/cv', [CvController::class, 'store']);
     Route::get('/stats', [StatsController::class, 'index']);
     Route::get('/users', [UserController::class, 'index']);
     Route::post('/onboarding', [UserController::class, 'saveOnboarding']);
+
+    Route::get('/orientations', [OrientationController::class, 'index']);
+    Route::get('/orientations/{id}', [OrientationController::class, 'show']);
+    Route::post('/orientations', [OrientationController::class, 'store']);
+    Route::put('/orientations/{id}', [OrientationController::class, 'update']);
+    Route::delete('/orientations/{id}', [OrientationController::class, 'destroy']);
 });

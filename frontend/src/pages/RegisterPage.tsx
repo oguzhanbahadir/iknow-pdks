@@ -15,7 +15,7 @@ export default function RegisterPage({ onLoginSuccess }: RegisterPageProps) {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [department, setDepartment] = useState('Frontend Yazılım');
+  const [department, setDepartment] = useState('Frontend Geliştirici');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -55,15 +55,7 @@ export default function RegisterPage({ onLoginSuccess }: RegisterPageProps) {
         throw new Error(data.error || 'Kayıt işlemi başarısız.');
       }
 
-      if (data.token) {
-        localStorage.setItem('pdks_token', data.token);
-      }
-
-      onLoginSuccess(data.user);
       setSuccess(true);
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1500);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -95,10 +87,20 @@ export default function RegisterPage({ onLoginSuccess }: RegisterPageProps) {
         )}
 
         {success ? (
-          <div className="p-6 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-3">
-            <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
-            <h3 className="font-bold text-emerald-900 text-base">Hesabınız Başarıyla Oluşturuldu!</h3>
-            <p className="text-xs text-emerald-700">Sisteme yönlendiriliyorsunuz...</p>
+          <div className="p-6 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-4">
+            <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
+            <div className="space-y-1">
+              <h3 className="font-bold text-emerald-950 text-base">Kayıt Başarıyla Alındı!</h3>
+              <p className="text-xs text-emerald-800 leading-relaxed">
+                Hesabınız oluşturuldu ve yönetici onayına gönderildi. Yöneticiniz hesabınızı onayladıktan sonra e-posta adresiniz ve şifreniz ile giriş yapabilirsiniz.
+              </p>
+            </div>
+            <Link
+              to="/login"
+              className="inline-flex items-center justify-center w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2.5 rounded-xl transition-colors shadow-xs"
+            >
+              Giriş Ekranına Dön
+            </Link>
           </div>
         ) : (
           <form onSubmit={handleRegister} className="space-y-4 text-xs">
@@ -155,9 +157,9 @@ export default function RegisterPage({ onLoginSuccess }: RegisterPageProps) {
                   onChange={(e) => setDepartment(e.target.value)}
                   className="w-full py-2 px-3 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-600 text-slate-900 font-semibold"
                 >
-                  <option value="Frontend Yazılım">Frontend Yazılım</option>
-                  <option value="Backend Yazılım">Backend Yazılım</option>
-                  <option value="Full-Stack Yazılım">Full-Stack Yazılım</option>
+                  <option value="Frontend Geliştirici">Frontend Geliştirici</option>
+                  <option value="Backend Geliştirici">Backend Geliştirici</option>
+                  <option value="Full-Stack Geliştirici">Full-Stack Geliştirici</option>
                   <option value="Mobil & UI/UX">Mobil & UI/UX</option>
                   <option value="DevOps & Cloud">DevOps & Cloud</option>
                 </select>

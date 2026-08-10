@@ -20,6 +20,7 @@ class AuthController extends Controller
             'phone' => $user->phone,
             'avatar' => $user->avatar,
             'isOnboarded' => $user->is_onboarded,
+            'isApproved' => $user->is_approved,
             'primaryDomain' => $user->primary_domain,
             'knownSkills' => $user->known_skills ?? [],
             'preferredCareerPath' => $user->preferred_career_path,
@@ -42,6 +43,10 @@ class AuthController extends Controller
 
         if (!$user || !Hash::check($password, $user->password)) {
             return response()->json(['error' => 'Geçersiz e-posta adresi veya şifre.'], 401);
+        }
+
+        if (!$user->is_approved) {
+            return response()->json(['error' => 'Hesabınız henüz yönetici tarafından onaylanmamıştır. Lütfen yöneticiniz ile iletişime geçiniz.'], 403);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -79,17 +84,16 @@ class AuthController extends Controller
             'email' => strtolower(trim($request->email)),
             'password' => Hash::make($request->password),
             'role' => 'USER',
-            'department' => $request->department ?? 'Yazılım Geliştirme',
+            'department' => $request->department ?? 'Frontend Geliştirici',
             'phone' => $request->phone ?? null,
             'avatar' => 'https://ui-avatars.com/api/?name=' . urlencode($request->fullName) . '&background=3F3C67&color=fff',
             'is_onboarded' => false,
+            'is_approved' => false,
         ]);
-
-        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'success' => true,
-            'token' => $token,
+            'message' => 'Hesabınız başarıyla oluşturuldu. Yöneticiniz hesabınızı onayladıktan sonra giriş yapabilirsiniz.',
             'user' => $this->formatUser($user)
         ]);
     }

@@ -76,7 +76,7 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
         <div>
           <div className="flex items-center space-x-2">
             <h1 className="text-2xl font-bold text-slate-900">
-              Hoş Geldiniz, {currentUser.fullName}! 👋
+              Hoş Geldiniz, {currentUser.fullName}!
             </h1>
             {isAdmin ? (
               <span className="bg-slate-900 text-white text-xs font-bold px-2 py-0.5 rounded-sm">
@@ -144,11 +144,10 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
             <div
               className="bg-emerald-600 h-full rounded-full"
               style={{
-                width: `${
-                  totalEstimatedHours > 0
+                width: `${totalEstimatedHours > 0
                     ? Math.min(100, Math.round((totalActualHours / totalEstimatedHours) * 100))
                     : 0
-                }%`,
+                  }%`,
               }}
             />
           </div>
@@ -248,7 +247,7 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
               </p>
             </div>
             <Link
-              to="/interns"
+              to="/team"
               className="w-full bg-slate-100 hover:bg-slate-200 text-slate-900 font-semibold text-xs py-2.5 px-4 rounded-xl flex items-center justify-between transition-colors"
             >
               <span>Personel Yönetimine Git</span>
@@ -314,13 +313,12 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
                 <div className="flex items-center space-x-2">
                   <span className="font-semibold text-slate-900">{t.title}</span>
                   <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      t.priority === 'HIGH'
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${t.priority === 'HIGH'
                         ? 'bg-red-100 text-red-700'
                         : t.priority === 'MEDIUM'
-                        ? 'bg-amber-100 text-amber-700'
-                        : 'bg-slate-100 text-slate-600'
-                    }`}
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}
                   >
                     {t.priority}
                   </span>
@@ -335,23 +333,22 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
                   </span>
                 )}
                 <span
-                  className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${
-                    t.status === 'DONE'
+                  className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${t.status === 'DONE'
                       ? 'bg-emerald-100 text-emerald-800'
                       : t.status === 'IN_PROGRESS'
-                      ? 'bg-blue-100 text-blue-800'
-                      : t.status === 'IN_REVIEW'
-                      ? 'bg-purple-100 text-purple-800'
-                      : 'bg-slate-100 text-slate-700'
-                  }`}
+                        ? 'bg-blue-100 text-blue-800'
+                        : t.status === 'IN_REVIEW'
+                          ? 'bg-purple-100 text-purple-800'
+                          : 'bg-slate-100 text-slate-700'
+                    }`}
                 >
                   {t.status === 'DONE'
                     ? 'Tamamlandı'
                     : t.status === 'IN_PROGRESS'
-                    ? 'Devam Ediyor'
-                    : t.status === 'IN_REVIEW'
-                    ? 'İncelemede'
-                    : 'Yapılacak'}
+                      ? 'Devam Ediyor'
+                      : t.status === 'IN_REVIEW'
+                        ? 'İncelemede'
+                        : 'Yapılacak'}
                 </span>
               </div>
             </div>

@@ -33,16 +33,17 @@ export default function EffortPage({ currentUser }: EffortPageProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const isAdmin = currentUser.role === 'ADMIN';
+
   // Filters
   const [selectedMonth, setSelectedMonth] = useState<string>('08');
   const [selectedYear, setSelectedYear] = useState<string>('2026');
-  const [selectedUserId, setSelectedUserId] = useState<string>('ALL');
-
-  const isAdmin = currentUser.role === 'ADMIN';
+  const [selectedUserId, setSelectedUserId] = useState<string>(isAdmin ? 'ALL' : currentUser.id);
 
   const fetchStats = async (month: string, year: string, userId: string) => {
     try {
-      const res = await fetch(`/api/stats?month=${month}&year=${year}&userId=${userId}`, {
+      const targetUserId = isAdmin ? userId : currentUser.id;
+      const res = await fetch(`/api/stats?month=${month}&year=${year}&userId=${targetUserId}`, {
         headers: getAuthHeaders(),
       });
       if (res.ok) {
@@ -70,14 +71,15 @@ export default function EffortPage({ currentUser }: EffortPageProps) {
 
   useEffect(() => {
     async function init() {
+      const initialUserId = isAdmin ? 'ALL' : currentUser.id;
       await Promise.all([
-        fetchStats(selectedMonth, selectedYear, selectedUserId),
-        fetchUsers(),
+        fetchStats(selectedMonth, selectedYear, initialUserId),
+        isAdmin ? fetchUsers() : Promise.resolve(),
       ]);
       setLoading(false);
     }
     init();
-  }, []);
+  }, [currentUser, isAdmin]);
 
   const handleFilterChange = (month: string, year: string, userId: string) => {
     setSelectedMonth(month);
@@ -111,7 +113,9 @@ export default function EffortPage({ currentUser }: EffortPageProps) {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Aylık Efor & İstatistik Analitiği</h1>
           <p className="text-xs text-slate-500 mt-1">
-            Seçilen ay ve yıl bazında personellerin harcadıkları çalışma saatleri ve görev tamamlama verimliliği.
+            {isAdmin
+              ? 'Seçilen ay ve yıl bazında personellerin harcadıkları çalışma saatleri ve görev tamamlama verimliliği.'
+              : 'Seçilen ay ve yıl bazında kişisel çalışma saatleriniz ve görev tamamlama verimliliğiniz.'}
           </p>
         </div>
 
@@ -203,12 +207,12 @@ export default function EffortPage({ currentUser }: EffortPageProps) {
 
         <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-xs space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase">
-            <span>Raporlanan Kişi</span>
+            <span>{isAdmin ? 'Raporlanan Kişi' : 'Kişisel Rapor'}</span>
             <Users className="w-4 h-4 text-blue-600" />
           </div>
           <div className="flex items-baseline space-x-2">
             <span className="text-3xl font-extrabold text-slate-900">{stats.length}</span>
-            <span className="text-xs text-slate-500">personel</span>
+            <span className="text-xs text-slate-500">{isAdmin ? 'personel' : 'kayıt'}</span>
           </div>
         </div>
       </div>

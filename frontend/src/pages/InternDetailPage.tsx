@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Star,
@@ -12,15 +12,21 @@ import {
   Wrench,
   Compass,
   AlertCircle,
+  Trash2,
+  X,
 } from 'lucide-react';
 import { PersonelDetail } from '../types';
 import { getAuthHeaders } from '../utils/api';
 
 export default function InternDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [intern, setIntern] = useState<PersonelDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteErrorMsg, setDeleteErrorMsg] = useState('');
 
   useEffect(() => {
     async function loadDetail() {
@@ -61,7 +67,7 @@ export default function InternDetailPage() {
     return (
       <div className="space-y-6">
         <Link
-          to="/interns"
+          to="/team"
           className="inline-flex items-center space-x-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-xs transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -84,14 +90,27 @@ export default function InternDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Back Button */}
-      <Link
-        to="/interns"
-        className="inline-flex items-center space-x-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-xs transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        <span>Personel Listesine Dön</span>
-      </Link>
+      {/* Back & Action Header */}
+      <div className="flex items-center justify-between">
+        <Link
+          to="/team"
+          className="inline-flex items-center space-x-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-xs transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Personel Listesine Dön</span>
+        </Link>
+
+        <button
+          onClick={() => {
+            setIsDeleteModalOpen(true);
+            setDeleteErrorMsg('');
+          }}
+          className="inline-flex items-center space-x-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 bg-white px-3 py-2 rounded-xl border border-red-200 shadow-xs transition-colors"
+        >
+          <Trash2 className="w-4 h-4" />
+          <span>Personeli Sil</span>
+        </button>
+      </div>
 
       {/* Profile Banner */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -373,6 +392,85 @@ export default function InternDetailPage() {
           </div>
         </div>
       </div>
+      {/* DELETE CONFIRMATION MODAL */}
+      {isDeleteModalOpen && intern && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="font-bold text-slate-900 text-base flex items-center space-x-2">
+                  <Trash2 className="w-5 h-5 text-red-600" />
+                  <span>Personel Kaydını Sil</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">Bu işlem geri alınamaz.</p>
+              </div>
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {deleteErrorMsg && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium">
+                {deleteErrorMsg}
+              </div>
+            )}
+
+            <div className="text-xs text-slate-600 space-y-2">
+              <p>
+                <strong className="text-slate-900 font-bold">{intern.fullName}</strong> ({intern.email}) isimli personeli silmek istediğinize emin misiniz?
+              </p>
+              <p className="text-slate-500 text-[11px]">
+                Bu personele ait tüm görevler, performans skorları ve CV dosyaları kalıcı olarak silinecektir.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-colors text-xs"
+              >
+                İptal
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!intern) return;
+                  setDeleteLoading(true);
+                  setDeleteErrorMsg('');
+                  try {
+                    const res = await fetch(`/api/interns/${intern.id}`, {
+                      method: 'DELETE',
+                      headers: getAuthHeaders(),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) {
+                      throw new Error(data.error || 'Personel silinemedi.');
+                    }
+                    navigate('/team');
+                  } catch (err: unknown) {
+                    if (err instanceof Error) {
+                      setDeleteErrorMsg(err.message);
+                    } else {
+                      setDeleteErrorMsg('Bir hata oluştu.');
+                    }
+                  } finally {
+                    setDeleteLoading(false);
+                  }
+                }}
+                disabled={deleteLoading}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-colors shadow-xs text-xs disabled:opacity-50 flex items-center space-x-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{deleteLoading ? 'Siliniyor...' : 'Evet, Sil'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

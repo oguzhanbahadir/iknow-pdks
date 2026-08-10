@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, CheckSquare, Users, BarChart3, ShieldAlert, Award } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, Users, BarChart3, ShieldAlert, Award, BookOpen } from 'lucide-react';
 
 interface SidebarProps {
   role: 'ADMIN' | 'USER';
@@ -17,19 +17,25 @@ export default function Sidebar({ role }: SidebarProps) {
       roles: ['ADMIN', 'USER'],
     },
     {
-      name: 'Görevler (Kanban & Liste)',
+      name: 'Görevler',
       href: '/tasks',
       icon: CheckSquare,
       roles: ['ADMIN', 'USER'],
     },
     {
+      name: 'Oryantasyon',
+      href: '/orientation',
+      icon: BookOpen,
+      roles: ['ADMIN', 'USER'],
+    },
+    {
       name: 'Personel & CV Yönetimi',
-      href: '/interns',
+      href: '/team',
       icon: Users,
       roles: ['ADMIN'],
     },
     {
-      name: 'Aylık Efor & Analitik',
+      name: 'Analitik',
       href: '/effort',
       icon: BarChart3,
       roles: ['ADMIN', 'USER'],
@@ -52,11 +58,10 @@ export default function Sidebar({ role }: SidebarProps) {
               <Link
                 key={item.name}
                 to={item.href}
-                className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-all ${
-                  isActive
-                    ? 'bg-indigo-600 text-white shadow-xs font-semibold'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                }`}
+                className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-all ${isActive
+                  ? 'bg-indigo-600 text-white shadow-xs font-semibold'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
               >
                 <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-500'}`} />
                 <span>{item.name}</span>

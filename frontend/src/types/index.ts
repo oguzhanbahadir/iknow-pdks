@@ -9,6 +9,7 @@ export interface User {
   targetCompany?: string;
   companyIntegrationNote?: string;
   isOnboarded?: boolean;
+  isApproved?: boolean;
   primaryDomain?: string;
   knownSkills?: string[];
   preferredCareerPath?: string;
