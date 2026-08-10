@@ -150,10 +150,25 @@ class TaskController extends Controller
         return response()->json(['success' => true, 'task' => $task]);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $task = Task::findOrFail($id);
+        $assignedUser = User::find($task->assigned_user_id);
+        $actor = $request->user();
+        $taskTitle = $task->title;
+
         $task->delete();
+
+        // Send Telegram notification if deleted by someone else
+        if ($assignedUser && !empty($assignedUser->telegram_chat_id) && ($actor->id ?? 0) !== $assignedUser->id) {
+            $actorName = $actor ? $actor->full_name : 'Yönetici';
+
+            $msg = "<b>🗑️ Bir Göreviniz Silindi!</b>\n\n" .
+                "• <b>Görev:</b> {$taskTitle}\n" .
+                "• <b>Silen Kişi:</b> {$actorName}";
+
+            $this->telegramService->sendMessage($assignedUser->telegram_chat_id, $msg);
+        }
 
         return response()->json(['success' => true]);
     }

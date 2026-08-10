@@ -28,6 +28,10 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
   const [selectedUserFilter, setSelectedUserFilter] = useState('ALL');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('ALL');
 
+  // Drag and Drop State
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskItem | null>(null);
@@ -314,10 +318,35 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {statusColumns.map((col) => {
             const colTasks = filteredTasks.filter((t) => t.status === col.key);
+            const isOver = dragOverColumn === col.key;
             return (
               <div
                 key={col.key}
-                className="bg-slate-100/70 border border-slate-200 rounded-2xl p-4 flex flex-col min-h-[500px]"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                  if (dragOverColumn !== col.key) {
+                    setDragOverColumn(col.key);
+                  }
+                }}
+                onDragLeave={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                    setDragOverColumn(null);
+                  }
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragOverColumn(null);
+                  const taskId = e.dataTransfer.getData('text/plain') || draggedTaskId;
+                  if (taskId) {
+                    handleUpdateStatus(taskId, col.key as TaskItem['status']);
+                  }
+                }}
+                className={`border rounded-2xl p-4 flex flex-col min-h-[500px] transition-all duration-150 ${
+                  isOver
+                    ? 'bg-indigo-50/80 border-indigo-400 ring-2 ring-indigo-400 ring-offset-2'
+                    : 'bg-slate-100/70 border-slate-200'
+                }`}
               >
                 <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-3">
                   <div className="flex items-center space-x-2">
@@ -331,10 +360,24 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                 <div className="space-y-3 flex-1 overflow-y-auto">
                   {colTasks.map((t) => {
                     const assignedUser = users.find((u) => u.id === t.assignedUserId);
+                    const isDragging = draggedTaskId === t.id;
                     return (
                       <div
                         key={t.id}
-                        className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs hover:shadow-sm transition-all space-y-3"
+                        draggable={true}
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('text/plain', t.id);
+                          setDraggedTaskId(t.id);
+                        }}
+                        onDragEnd={() => {
+                          setDraggedTaskId(null);
+                          setDragOverColumn(null);
+                        }}
+                        className={`bg-white border rounded-xl p-4 shadow-xs hover:shadow-md transition-all space-y-3 cursor-grab active:cursor-grabbing select-none ${
+                          isDragging
+                            ? 'opacity-40 scale-95 border-dashed border-indigo-400 bg-indigo-50/40'
+                            : 'border-slate-200'
+                        }`}
                       >
                         <div className="flex items-center justify-between">
                           <span
@@ -416,7 +459,7 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
 
                   {colTasks.length === 0 && (
                     <div className="h-32 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-xs text-slate-400 font-medium">
-                      Görev yok
+                      Görev yok (Sürükleyip bırakabilirsiniz)
                     </div>
                   )}
                 </div>
