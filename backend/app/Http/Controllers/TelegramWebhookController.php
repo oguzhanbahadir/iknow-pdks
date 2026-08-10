@@ -9,6 +9,7 @@ use App\Services\TelegramService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class TelegramWebhookController extends Controller
 {
@@ -42,10 +43,21 @@ class TelegramWebhookController extends Controller
         if ($res->successful() && $res->json('ok')) {
             $updates = $res->json('result') ?? [];
             $processedCount = 0;
+            $maxUpdateId = 0;
 
             foreach ($updates as $up) {
                 $this->processUpdate($up);
                 $processedCount++;
+                if (isset($up['update_id'])) {
+                    $maxUpdateId = max($maxUpdateId, $up['update_id']);
+                }
+            }
+
+            // Acknowledge updates by setting offset to maxUpdateId + 1
+            if ($maxUpdateId > 0) {
+                Http::get("https://api.telegram.org/bot{$token}/getUpdates", [
+                    'offset' => $maxUpdateId + 1,
+                ]);
             }
 
             return response()->json([
@@ -60,7 +72,9 @@ class TelegramWebhookController extends Controller
 
     public function processUpdate(array $update)
     {
-        $message = $update['message'] ?? null;
+        Log::info('Telegram update payload: ' . json_encode($update));
+
+        $message = $update['message'] ?? $update['edited_message'] ?? null;
         if (!$message || !isset($message['chat']['id'])) {
             return;
         }
@@ -72,10 +86,11 @@ class TelegramWebhookController extends Controller
             return;
         }
 
+        $lowerText = strtolower($text);
         $user = User::where('telegram_chat_id', $chatId)->first();
 
         // 1. COMMAND: /logout
-        if ($text === '/logout' || strtolower($text) === 'cikis') {
+        if (str_starts_with($lowerText, '/logout') || $lowerText === 'cikis' || $lowerText === 'çıkış') {
             if ($user) {
                 $user->update(['telegram_chat_id' => null]);
                 $this->telegramService->sendMessage($chatId, "<b>🔒 Oturum Kapandı</b>\n\nTelegram hesabınızın iKnow PDKS profilinizle eşleştirmesi kaldırıldı. Tekrar bağlanmak için /start yazabilirsiniz.");
@@ -87,7 +102,7 @@ class TelegramWebhookController extends Controller
         }
 
         // 2. COMMAND: /tasks or görevlerim
-        if ($text === '/tasks' || strtolower($text) === 'gorevlerim' || strtolower($text) === 'görevlerim') {
+        if (str_starts_with($lowerText, '/tasks') || $lowerText === 'gorevlerim' || $lowerText === 'görevlerim') {
             if (!$user) {
                 $this->telegramService->sendMessage($chatId, "⚠️ <b>Henüz Giriş Yapmadınız</b>\n\nGörevlerinizi listeleyebilmek için öncelikle PDKS hesabınızı bağlamalısınız.\nLütfen /start yazarak giriş yapın.");
                 return;
@@ -133,7 +148,7 @@ class TelegramWebhookController extends Controller
         }
 
         // 3. COMMAND: /start or /help
-        if ($text === '/start' || $text === '/help') {
+        if (str_starts_with($lowerText, '/start') || str_starts_with($lowerText, '/help')) {
             if ($user) {
                 $msg = "<b>👋 Hoş Geldiniz, {$user->full_name}!</b>\n\n" .
                     "Telegram hesabınız <b>{$user->email}</b> profili ile eşleşmiş durumda.\n\n" .
@@ -158,7 +173,7 @@ class TelegramWebhookController extends Controller
         }
 
         // 4. COMMAND: /profile
-        if ($text === '/profile') {
+        if (str_starts_with($lowerText, '/profile')) {
             if (!$user) {
                 $this->telegramService->sendMessage($chatId, "Giriş yapmadınız. Lütfen /start yazarak eşleştirme başlatın.");
                 return;
