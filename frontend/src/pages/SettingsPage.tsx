@@ -14,6 +14,7 @@ import {
   Terminal,
   ExternalLink,
   Search,
+  Globe,
 } from 'lucide-react';
 import { User } from '../types';
 import { getAuthHeaders } from '../utils/api';
@@ -29,6 +30,9 @@ interface TelegramStatus {
   botUsername?: string;
   maskedToken?: string;
   defaultChatId?: string;
+  webhookUrl?: string;
+  webhookPendingCount?: number;
+  webhookLastError?: string;
   message?: string;
 }
 
@@ -56,6 +60,10 @@ export default function SettingsPage({ currentUser }: SettingsPageProps) {
   // Poll Updates State
   const [polling, setPolling] = useState(false);
   const [pollResult, setPollResult] = useState<{ success: boolean; msg: string } | null>(null);
+
+  // Set Webhook State
+  const [webhookSettingUp, setWebhookSettingUp] = useState(false);
+  const [webhookResult, setWebhookResult] = useState<{ success: boolean; msg: string } | null>(null);
 
   const fetchStatus = async () => {
     setLoading(true);
@@ -175,6 +183,28 @@ export default function SettingsPage({ currentUser }: SettingsPageProps) {
     }
   };
 
+  const handleSetWebhook = async () => {
+    setWebhookSettingUp(true);
+    setWebhookResult(null);
+    try {
+      const res = await fetch('/api/telegram/set-webhook', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setWebhookResult({ success: true, msg: data.message });
+        await fetchStatus();
+      } else {
+        setWebhookResult({ success: false, msg: data.error || 'Webhook tanımlanamadı.' });
+      }
+    } catch (err) {
+      setWebhookResult({ success: false, msg: 'Sunucu hatası oluştu.' });
+    } finally {
+      setWebhookSettingUp(false);
+    }
+  };
+
   const envTemplateText = `TELEGRAM_BOT_TOKEN=BOT_FATHER_TOKENINIZ
 TELEGRAM_CHAT_ID=-100XXXXXXXXXX`;
 
@@ -288,6 +318,42 @@ TELEGRAM_CHAT_ID=-100XXXXXXXXXX`;
                 {status?.defaultChatId || 'Belirtilmedi'}
               </span>
             </div>
+
+            <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-2xl">
+              <span className="font-bold text-slate-600">Aktif Webhook URL:</span>
+              <span className="font-mono text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded-md text-[11px] truncate max-w-[200px]" title={status?.webhookUrl || 'Tanımlanmadı'}>
+                {status?.webhookUrl || 'Tanımlanmadı'}
+              </span>
+            </div>
+          </div>
+
+          {webhookResult && (
+            <div
+              className={`p-3 rounded-2xl text-xs font-semibold flex items-center space-x-2 border ${
+                webhookResult.success
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                  : 'bg-red-50 text-red-800 border-red-200'
+              }`}
+            >
+              {webhookResult.success ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+              )}
+              <span>{webhookResult.msg}</span>
+            </div>
+          )}
+
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={handleSetWebhook}
+              disabled={webhookSettingUp || !status?.connected}
+              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition-colors shadow-xs disabled:opacity-50 flex items-center justify-center space-x-2"
+            >
+              <Globe className="w-4 h-4 text-indigo-400" />
+              <span>{webhookSettingUp ? 'Tanımlanıyor...' : 'Sunucu Webhook Adresini Telegram\'a Tanımla (setWebhook)'}</span>
+            </button>
           </div>
 
           {status?.message && !status.connected && (

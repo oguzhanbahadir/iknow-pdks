@@ -22,7 +22,30 @@ class TelegramController extends Controller
         }
 
         $info = $this->telegramService->getBotInfo();
+        $webhook = $this->telegramService->getWebhookInfo();
+
+        if (isset($webhook['info'])) {
+            $info['webhookUrl'] = $webhook['info']['url'] ?? '';
+            $info['webhookPendingCount'] = $webhook['info']['pending_update_count'] ?? 0;
+            $info['webhookLastError'] = $webhook['info']['last_error_message'] ?? null;
+        }
+
         return response()->json(['status' => $info]);
+    }
+
+    public function setWebhook(Request $request)
+    {
+        if ($request->user()->role !== 'ADMIN') {
+            return response()->json(['error' => 'Yetkisiz erişim.'], 403);
+        }
+
+        $url = $request->url;
+        if (empty($url)) {
+            $url = $request->schemeAndHttpHost() . '/api/telegram/webhook';
+        }
+
+        $res = $this->telegramService->setWebhook($url);
+        return response()->json($res);
     }
 
     public function sendTestMessage(Request $request)

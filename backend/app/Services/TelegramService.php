@@ -81,6 +81,58 @@ class TelegramService
         }
     }
 
+    public function setWebhook(string $url): array
+    {
+        if (!$this->isConfigured()) {
+            return ['success' => false, 'error' => 'TELEGRAM_BOT_TOKEN .env dosyasında henüz tanımlanmamış.'];
+        }
+
+        try {
+            $token = $this->getBotToken();
+            $response = Http::timeout(10)->post("https://api.telegram.org/bot{$token}/setWebhook", [
+                'url' => $url,
+            ]);
+
+            if ($response->successful() && $response->json('ok')) {
+                return [
+                    'success' => true,
+                    'message' => "Telegram Webhook adresi başarıyla tanımlandı: {$url}",
+                    'url' => $url,
+                ];
+            }
+
+            return [
+                'success' => false,
+                'error' => $response->json('description') ?? 'Webhook tanımı başarısız.',
+            ];
+        } catch (\Exception $e) {
+            return ['success' => false, 'error' => 'Bağlantı hatası: ' . $e->getMessage()];
+        }
+    }
+
+    public function getWebhookInfo(): array
+    {
+        if (!$this->isConfigured()) {
+            return ['success' => false];
+        }
+
+        try {
+            $token = $this->getBotToken();
+            $response = Http::timeout(5)->get("https://api.telegram.org/bot{$token}/getWebhookInfo");
+
+            if ($response->successful() && $response->json('ok')) {
+                return [
+                    'success' => true,
+                    'info' => $response->json('result'),
+                ];
+            }
+        } catch (\Exception $e) {
+            // Ignore
+        }
+
+        return ['success' => false];
+    }
+
     public function sendMessage(string $chatId, string $message, string $parseMode = 'HTML'): array
     {
         if (!$this->isConfigured()) {

@@ -46,6 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/orientations/{id}', [OrientationController::class, 'destroy']);
 
     Route::get('/telegram/status', [TelegramController::class, 'getStatus']);
+    Route::post('/telegram/set-webhook', [TelegramController::class, 'setWebhook']);
     Route::post('/telegram/test', [TelegramController::class, 'sendTestMessage']);
     Route::post('/telegram/send', [TelegramController::class, 'sendMessage']);
     Route::post('/telegram/poll-updates', [TelegramWebhookController::class, 'pollUpdates']);
