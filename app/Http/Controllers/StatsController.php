@@ -10,7 +10,13 @@ class StatsController extends Controller
 {
     public function index(Request $request)
     {
-        $userIdFilter = $request->query('userId', 'ALL');
+        $authUser = $request->user();
+
+        if ($authUser && $authUser->role !== 'ADMIN') {
+            $userIdFilter = (string) $authUser->id;
+        } else {
+            $userIdFilter = $request->query('userId', 'ALL');
+        }
 
         $usersQuery = User::where('role', 'USER');
         if ($userIdFilter !== 'ALL') {

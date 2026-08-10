@@ -23,8 +23,6 @@ class UserController extends Controller
                 'preferredCareerPath' => $u->preferred_career_path,
                 'toolsUsed' => $u->tools_used ?? [],
                 'experienceLevel' => $u->experience_level,
-                'isTelegramConnected' => !empty($u->telegram_chat_id),
-                'telegramUsername' => $u->telegram_username,
             ];
         });
 

@@ -22,6 +22,7 @@ class InternController extends Controller
             'targetCompany' => $u->target_company,
             'companyIntegrationNote' => $u->company_integration_note,
             'isOnboarded' => $u->is_onboarded,
+            'isApproved' => $u->is_approved,
             'primaryDomain' => $u->primary_domain,
             'knownSkills' => $u->known_skills ?? [],
             'preferredCareerPath' => $u->preferred_career_path,
@@ -134,12 +135,13 @@ class InternController extends Controller
             'email' => strtolower(trim($request->email)),
             'password' => Hash::make($request->password),
             'role' => 'USER',
-            'department' => $request->department ?? 'Yazılım Geliştirme',
+            'department' => $request->department ?? 'Frontend Geliştirici',
             'phone' => $request->phone ?? null,
             'target_company' => $request->targetCompany ?? null,
             'company_integration_note' => $request->companyIntegrationNote ?? null,
             'avatar' => 'https://ui-avatars.com/api/?name=' . urlencode($request->fullName) . '&background=3F3C67&color=fff',
             'is_onboarded' => false,
+            'is_approved' => true,
         ]);
 
         return response()->json(['success' => true, 'user' => $newIntern], 201);
@@ -166,6 +168,45 @@ class InternController extends Controller
         return response()->json([
             'success' => true,
             'message' => "{$targetUser->full_name} isimli personelin şifresi '{$cleanPassword}' olarak güncellendi."
+        ]);
+    }
+
+    public function destroy($id, Request $request)
+    {
+        $adminUser = $request->user();
+
+        if (!$adminUser || $adminUser->role !== 'ADMIN') {
+            return response()->json(['error' => 'Bu işlemi yapmak için yetkiniz bulunmamaktadır.'], 403);
+        }
+
+        $targetUser = User::where('role', 'USER')->findOrFail($id);
+        $fullName = $targetUser->full_name;
+        $targetUser->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$fullName} isimli personel başarıyla silindi."
+        ]);
+    }
+
+    public function toggleApprove($id, Request $request)
+    {
+        $adminUser = $request->user();
+
+        if (!$adminUser || $adminUser->role !== 'ADMIN') {
+            return response()->json(['error' => 'Bu işlemi yapmak için yetkiniz bulunmamaktadır.'], 403);
+        }
+
+        $targetUser = User::where('role', 'USER')->findOrFail($id);
+        $targetUser->is_approved = !$targetUser->is_approved;
+        $targetUser->save();
+
+        $statusStr = $targetUser->is_approved ? 'onaylandı' : 'onayı kaldırıldı';
+
+        return response()->json([
+            'success' => true,
+            'isApproved' => $targetUser->is_approved,
+            'message' => "{$targetUser->full_name} isimli personelin hesabı {$statusStr}."
         ]);
     }
 }

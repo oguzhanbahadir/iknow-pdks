@@ -6,24 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('telegram_chat_id')->nullable()->index()->after('email');
-            $table->string('telegram_username')->nullable()->after('telegram_chat_id');
+            $table->boolean('is_approved')->default(true)->after('role');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['telegram_chat_id', 'telegram_username']);
+            $table->dropColumn('is_approved');
         });
     }
 };
