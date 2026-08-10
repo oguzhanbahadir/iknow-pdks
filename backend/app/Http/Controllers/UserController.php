@@ -86,4 +86,48 @@ class UserController extends Controller
             ], 500);
         }
     }
+
+    public function createAdmin(Request $request)
+    {
+        if ($request->user() && $request->user()->role !== 'ADMIN') {
+            return response()->json(['error' => 'Yetkisiz erişim.'], 403);
+        }
+
+        $request->validate([
+            'fullName' => 'required|string',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:6',
+        ], [
+            'fullName.required' => 'Ad Soyad alanı zorunludur.',
+            'email.required' => 'E-posta alanı zorunludur.',
+            'email.unique' => 'Bu e-posta adresi sistemde zaten kayıtlı.',
+            'password.required' => 'Şifre alanı zorunludur.',
+            'password.min' => 'Şifre en az 6 karakter olmalıdır.',
+        ]);
+
+        $admin = User::create([
+            'full_name' => trim($request->fullName),
+            'email' => strtolower(trim($request->email)),
+            'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+            'role' => 'ADMIN',
+            'department' => $request->department ?? 'Yönetim / IK',
+            'phone' => $request->phone ?? null,
+            'avatar' => 'https://ui-avatars.com/api/?name=' . urlencode($request->fullName) . '&background=4F46E5&color=fff',
+            'is_onboarded' => true,
+            'is_approved' => true,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Yeni Admin kullanıcı başarıyla oluşturuldu.',
+            'user' => [
+                'id' => (string) $admin->id,
+                'fullName' => $admin->full_name,
+                'email' => $admin->email,
+                'role' => $admin->role,
+                'department' => $admin->department,
+                'phone' => $admin->phone,
+            ]
+        ], 201);
+    }
 }

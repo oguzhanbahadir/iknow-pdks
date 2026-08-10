@@ -37,6 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/cv', [CvController::class, 'store']);
     Route::get('/stats', [StatsController::class, 'index']);
     Route::get('/users', [UserController::class, 'index']);
+    Route::post('/users/create-admin', [UserController::class, 'createAdmin']);
     Route::post('/onboarding', [UserController::class, 'saveOnboarding']);
     Route::post('/system/storage-link', [UserController::class, 'linkStorage']);
 
