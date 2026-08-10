@@ -5,6 +5,7 @@ export interface User {
   role: 'ADMIN' | 'USER';
   department?: string;
   phone?: string;
+  telegram_chat_id?: string;
   avatar?: string;
   targetCompany?: string;
   companyIntegrationNote?: string;

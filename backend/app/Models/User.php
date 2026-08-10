@@ -18,6 +18,7 @@ class User extends Authenticatable
         'role',
         'department',
         'phone',
+        'telegram_chat_id',
         'avatar',
         'target_company',
         'company_integration_note',
