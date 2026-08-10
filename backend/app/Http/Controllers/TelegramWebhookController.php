@@ -74,6 +74,68 @@ class TelegramWebhookController extends Controller
     {
         Log::info('Telegram update payload: ' . json_encode($update));
 
+        // 0. HANDLE INLINE KEYBOARD CALLBACK QUERIES (Approve / Reject User Buttons)
+        $callbackQuery = $update['callback_query'] ?? null;
+        if ($callbackQuery) {
+            $callbackId = (string) $callbackQuery['id'];
+            $data = (string) ($callbackQuery['data'] ?? '');
+            $chatId = (string) ($callbackQuery['message']['chat']['id'] ?? '');
+            $messageId = (int) ($callbackQuery['message']['message_id'] ?? 0);
+
+            if (str_starts_with($data, 'approve_user_')) {
+                $userId = str_replace('approve_user_', '', $data);
+                $targetUser = User::find($userId);
+
+                if ($targetUser) {
+                    $targetUser->update(['is_approved' => true]);
+                    $this->telegramService->answerCallbackQuery($callbackId, "✅ {$targetUser->full_name} hesabı başarıyla onaylandı!");
+
+                    if ($messageId > 0) {
+                        $updatedText = "<b>✅ PERSONEL HESABI ONAYLANDI</b>\n\n" .
+                            "• <b>Ad Soyad:</b> {$targetUser->full_name}\n" .
+                            "• <b>E-Posta:</b> {$targetUser->email}\n" .
+                            "• <b>Departman:</b> " . ($targetUser->department ?? 'Geliştirici') . "\n" .
+                            "• <b>Durum:</b> 🟢 Onaylandı (Sisteme Giriş Yapabilir)";
+                        $this->telegramService->editMessageText($chatId, $messageId, $updatedText);
+                    }
+
+                    if (!empty($targetUser->telegram_chat_id)) {
+                        $this->telegramService->sendMessage(
+                            $targetUser->telegram_chat_id,
+                            "🎉 <b>Tebrikler {$targetUser->full_name}!</b>\n\nPDKS hesabınız yöneticiniz tarafından onaylandı. Artık sisteme giriş yapabilirsiniz."
+                        );
+                    }
+                } else {
+                    $this->telegramService->answerCallbackQuery($callbackId, "Kullanıcı kaydı bulunamadı.");
+                }
+                return;
+            }
+
+            if (str_starts_with($data, 'reject_user_')) {
+                $userId = str_replace('reject_user_', '', $data);
+                $targetUser = User::find($userId);
+
+                if ($targetUser) {
+                    $userName = $targetUser->full_name;
+                    $userEmail = $targetUser->email;
+                    $targetUser->delete();
+
+                    $this->telegramService->answerCallbackQuery($callbackId, "❌ {$userName} kaydı reddedildi ve silindi.");
+
+                    if ($messageId > 0) {
+                        $updatedText = "<b>❌ PERSONEL KAYDI REDDEDİLDİ</b>\n\n" .
+                            "• <b>Ad Soyad:</b> {$userName}\n" .
+                            "• <b>E-Posta:</b> {$userEmail}\n" .
+                            "• <b>Durum:</b> 🔴 Reddedildi ve Veritabanından Silindi";
+                        $this->telegramService->editMessageText($chatId, $messageId, $updatedText);
+                    }
+                } else {
+                    $this->telegramService->answerCallbackQuery($callbackId, "Kullanıcı kaydı bulunamadı.");
+                }
+                return;
+            }
+        }
+
         $message = $update['message'] ?? $update['edited_message'] ?? null;
         if (!$message || !isset($message['chat']['id'])) {
             return;

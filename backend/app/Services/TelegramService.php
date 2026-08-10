@@ -170,4 +170,63 @@ class TelegramService
             ];
         }
     }
+
+    public function sendInlineKeyboardMessage(string $chatId, string $message, array $inlineKeyboard): array
+    {
+        if (!$this->isConfigured()) {
+            return ['success' => false, 'error' => 'TELEGRAM_BOT_TOKEN .env dosyasında henüz tanımlanmamış.'];
+        }
+
+        try {
+            $token = $this->getBotToken();
+            $response = Http::timeout(10)->post("https://api.telegram.org/bot{$token}/sendMessage", [
+                'chat_id' => $chatId,
+                'text' => $message,
+                'parse_mode' => 'HTML',
+                'reply_markup' => [
+                    'inline_keyboard' => $inlineKeyboard,
+                ],
+            ]);
+
+            if ($response->successful() && $response->json('ok')) {
+                return ['success' => true, 'messageId' => $response->json('result.message_id')];
+            }
+
+            return ['success' => false, 'error' => $response->json('description') ?? 'Mesaj iletilemedi.'];
+        } catch (\Exception $e) {
+            Log::error('Telegram sendInlineKeyboardMessage error: ' . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    public function answerCallbackQuery(string $callbackQueryId, string $text): void
+    {
+        if (!$this->isConfigured()) return;
+        try {
+            $token = $this->getBotToken();
+            Http::timeout(5)->post("https://api.telegram.org/bot{$token}/answerCallbackQuery", [
+                'callback_query_id' => $callbackQueryId,
+                'text' => $text,
+                'show_alert' => true,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Telegram answerCallbackQuery error: ' . $e->getMessage());
+        }
+    }
+
+    public function editMessageText(string $chatId, int $messageId, string $newText): void
+    {
+        if (!$this->isConfigured()) return;
+        try {
+            $token = $this->getBotToken();
+            Http::timeout(5)->post("https://api.telegram.org/bot{$token}/editMessageText", [
+                'chat_id' => $chatId,
+                'message_id' => $messageId,
+                'text' => $newText,
+                'parse_mode' => 'HTML',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Telegram editMessageText error: ' . $e->getMessage());
+        }
+    }
 }

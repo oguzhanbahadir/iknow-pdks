@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\TelegramService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -71,6 +72,13 @@ class AuthController extends Controller
         ]);
     }
 
+    protected TelegramService $telegramService;
+
+    public function __construct(TelegramService $telegramService)
+    {
+        $this->telegramService = $telegramService;
+    }
+
     public function register(Request $request)
     {
         $request->validate([
@@ -90,6 +98,48 @@ class AuthController extends Controller
             'is_onboarded' => false,
             'is_approved' => false,
         ]);
+
+        // Send Telegram alert with inline approval buttons to Admin(s)
+        try {
+            $adminChatIds = User::where('role', 'ADMIN')
+                ->whereNotNull('telegram_chat_id')
+                ->where('telegram_chat_id', '!=', '')
+                ->pluck('telegram_chat_id')
+                ->toArray();
+
+            if (empty($adminChatIds)) {
+                $defaultChatId = $this->telegramService->getDefaultChatId();
+                if ($defaultChatId) {
+                    $adminChatIds = [$defaultChatId];
+                }
+            }
+
+            $alertMsg = "<b>🆕 Yeni Personel Kaydı Yapıldı!</b>\n\n" .
+                "• <b>Ad Soyad:</b> {$user->full_name}\n" .
+                "• <b>E-Posta:</b> {$user->email}\n" .
+                "• <b>Departman:</b> {$user->department}\n" .
+                "• <b>Tarih:</b> " . date('d.m.Y H:i') . "\n\n" .
+                "<i>Bu personelin PDKS sistemine erişmesini onaylıyor musunuz?</i>";
+
+            $inlineKeyboard = [
+                [
+                    [
+                        'text' => '✅ Onayla',
+                        'callback_data' => "approve_user_{$user->id}",
+                    ],
+                    [
+                        'text' => '❌ Reddet & Sil',
+                        'callback_data' => "reject_user_{$user->id}",
+                    ],
+                ]
+            ];
+
+            foreach ($adminChatIds as $adminChatId) {
+                $this->telegramService->sendInlineKeyboardMessage($adminChatId, $alertMsg, $inlineKeyboard);
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Register Telegram notification error: ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,

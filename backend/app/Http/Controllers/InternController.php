@@ -23,6 +23,7 @@ class InternController extends Controller
             'companyIntegrationNote' => $u->company_integration_note,
             'isOnboarded' => $u->is_onboarded,
             'isApproved' => $u->is_approved,
+            'telegram_chat_id' => $u->telegram_chat_id,
             'primaryDomain' => $u->primary_domain,
             'knownSkills' => $u->known_skills ?? [],
             'preferredCareerPath' => $u->preferred_career_path,

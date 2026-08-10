@@ -51,6 +51,7 @@ export interface CvItem {
   fileName: string;
   fileUrl: string;
   fileSize: number;
+  createdAt?: string;
 }
 
 export interface PersonelDetail extends User {

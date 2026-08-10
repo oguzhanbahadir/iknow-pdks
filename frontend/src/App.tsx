@@ -12,6 +12,7 @@ import InternDetailPage from './pages/InternDetailPage';
 import EffortPage from './pages/EffortPage';
 import OrientationPage from './pages/OrientationPage';
 import SettingsPage from './pages/SettingsPage';
+import ProfilePage from './pages/ProfilePage';
 import { User } from './types';
 import { getAuthHeaders } from './utils/api';
 
@@ -91,6 +92,7 @@ export default function App() {
                 <Route path="/interns/:id" element={<Navigate to="/team" replace />} />
                 <Route path="/effort" element={<EffortPage currentUser={currentUser} />} />
                 <Route path="/orientation" element={<OrientationPage currentUser={currentUser} />} />
+                <Route path="/profile" element={<ProfilePage currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
                 <Route path="/settings" element={<SettingsPage currentUser={currentUser} />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>

@@ -22,6 +22,7 @@ import {
   ShieldAlert,
   UserCheck,
   UserX,
+  Bot,
 } from 'lucide-react';
 import { User, PersonelDetail } from '../types';
 import { getAuthHeaders } from '../utils/api';
@@ -484,6 +485,16 @@ export default function InternsPage({ currentUser }: InternsPageProps) {
                               {intern.fullName}
                             </Link>
                             <span className="text-[11px] text-slate-400 block">{intern.email}</span>
+                            {intern.telegram_chat_id ? (
+                              <span className="inline-flex items-center space-x-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md mt-0.5">
+                                <Bot className="w-3 h-3 text-emerald-600 shrink-0" />
+                                <span className="font-mono">ID: {intern.telegram_chat_id}</span>
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-slate-400 italic block mt-0.5">
+                                Telegram: Yok
+                              </span>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -708,6 +719,16 @@ export default function InternsPage({ currentUser }: InternsPageProps) {
                         <h3 className="font-bold text-slate-900 text-base">{intern.fullName}</h3>
                         <p className="text-xs text-slate-500 font-medium">{intern.department || 'Yazılım'}</p>
                         <p className="text-[11px] text-slate-400">{intern.email}</p>
+                        {intern.telegram_chat_id ? (
+                          <span className="inline-flex items-center space-x-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md mt-1">
+                            <Bot className="w-3 h-3 text-emerald-600 shrink-0" />
+                            <span className="font-mono">Chat ID: {intern.telegram_chat_id}</span>
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 italic block mt-1">
+                            Telegram: Bağlı Değil
+                          </span>
+                        )}
                       </div>
                     </div>
 

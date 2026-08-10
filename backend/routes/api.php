@@ -37,7 +37,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/cv', [CvController::class, 'store']);
     Route::get('/stats', [StatsController::class, 'index']);
     Route::get('/users', [UserController::class, 'index']);
+    Route::get('/profile', [UserController::class, 'getProfile']);
+    Route::put('/profile', [UserController::class, 'updateProfile']);
     Route::post('/users/create-admin', [UserController::class, 'createAdmin']);
+    Route::post('/users/{id}/telegram-chat-id', [UserController::class, 'updateTelegramChatId']);
     Route::post('/onboarding', [UserController::class, 'saveOnboarding']);
     Route::post('/system/storage-link', [UserController::class, 'linkStorage']);
 
