@@ -38,6 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/stats', [StatsController::class, 'index']);
     Route::get('/users', [UserController::class, 'index']);
     Route::post('/onboarding', [UserController::class, 'saveOnboarding']);
+    Route::post('/system/storage-link', [UserController::class, 'linkStorage']);
 
     Route::get('/orientations', [OrientationController::class, 'index']);
     Route::get('/orientations/{id}', [OrientationController::class, 'show']);
