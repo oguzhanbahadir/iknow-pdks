@@ -15,6 +15,8 @@ import {
   ExternalLink,
   Search,
   Globe,
+  FileText,
+  FolderCheck,
 } from 'lucide-react';
 import { User } from '../types';
 import { getAuthHeaders } from '../utils/api';
@@ -64,6 +66,10 @@ export default function SettingsPage({ currentUser }: SettingsPageProps) {
   // Set Webhook State
   const [webhookSettingUp, setWebhookSettingUp] = useState(false);
   const [webhookResult, setWebhookResult] = useState<{ success: boolean; msg: string } | null>(null);
+
+  // Storage Link State
+  const [linkingStorage, setLinkingStorage] = useState(false);
+  const [storageResult, setStorageResult] = useState<{ success: boolean; msg: string } | null>(null);
 
   const fetchStatus = async () => {
     setLoading(true);
@@ -205,6 +211,27 @@ export default function SettingsPage({ currentUser }: SettingsPageProps) {
     }
   };
 
+  const handleStorageLink = async () => {
+    setLinkingStorage(true);
+    setStorageResult(null);
+    try {
+      const res = await fetch('/api/system/storage-link', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setStorageResult({ success: true, msg: data.message });
+      } else {
+        setStorageResult({ success: false, msg: data.error || 'Storage bağlantısı oluşturulamadı.' });
+      }
+    } catch (err) {
+      setStorageResult({ success: false, msg: 'Sunucu hatası oluştu.' });
+    } finally {
+      setLinkingStorage(false);
+    }
+  };
+
   const envTemplateText = `TELEGRAM_BOT_TOKEN=BOT_FATHER_TOKENINIZ
 TELEGRAM_CHAT_ID=-100XXXXXXXXXX`;
 
@@ -268,6 +295,68 @@ TELEGRAM_CHAT_ID=-100XXXXXXXXXX`;
           </div>
         </div>
       )}
+
+      {/* Top Status Cards Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Broadcast Message Form */}
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+          <div className="flex items-center space-x-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-bold shadow-xs">
+              <MessageSquare className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-slate-900 text-sm">Telegram Özel veya Grup Bildirimi Gönder</h3>
+              <p className="text-xs text-slate-500">Personellere veya Telegram Grubuna Duyuru İletin</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* STORAGE & CV LINKING CARD */}
+      <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center font-bold shadow-xs shrink-0">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-slate-900 text-base flex items-center space-x-2">
+                <span>Dosya & CV Depolama Sembolik Bağlantısı (storage:link)</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Yüklenen PDF CV dosyalarının canlı sunucuda (veya yerelde) erişilebilir olması için Laravel storage sembolik köprüsünü oluşturur.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleStorageLink}
+            disabled={linkingStorage}
+            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center space-x-2 transition-colors shadow-xs shrink-0 disabled:opacity-50"
+          >
+            <FolderCheck className={`w-4 h-4 ${linkingStorage ? 'animate-spin' : ''}`} />
+            <span>{linkingStorage ? 'Oluşturuluyor...' : 'Storage Bağlantısını Oluştur (storage:link)'}</span>
+          </button>
+        </div>
+
+        {storageResult && (
+          <div
+            className={`p-3.5 rounded-2xl text-xs font-semibold flex items-center space-x-2 border ${
+              storageResult.success
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                : 'bg-red-50 text-red-800 border-red-200'
+            }`}
+          >
+            {storageResult.success ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+            )}
+            <span>{storageResult.msg}</span>
+          </div>
+        )}
+      </div>
 
       {/* Top Status Cards Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -66,4 +66,24 @@ class UserController extends Controller
             ]
         ]);
     }
+
+    public function linkStorage(Request $request)
+    {
+        if ($request->user() && $request->user()->role !== 'ADMIN') {
+            return response()->json(['error' => 'Yetkisiz erişim.'], 403);
+        }
+
+        try {
+            \Illuminate\Support\Facades\Artisan::call('storage:link');
+            return response()->json([
+                'success' => true,
+                'message' => 'Storage sembolik bağlantısı (storage:link) başarıyla oluşturuldu!',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Storage link hatası: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 }
