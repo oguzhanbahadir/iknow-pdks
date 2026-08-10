@@ -16,6 +16,7 @@ class UserController extends Controller
                 'email' => $u->email,
                 'role' => $u->role,
                 'department' => $u->department,
+                'telegram_chat_id' => $u->telegram_chat_id,
                 'avatar' => $u->avatar,
                 'isOnboarded' => $u->is_onboarded,
                 'primaryDomain' => $u->primary_domain,

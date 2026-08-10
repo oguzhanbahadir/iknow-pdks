@@ -8,10 +8,13 @@ use App\Http\Controllers\CvController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\OrientationController;
+use App\Http\Controllers\TelegramController;
+use App\Http\Controllers\TelegramWebhookController;
 
-// Public Auth Routes
+// Public Auth & Webhook Routes
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/register', [AuthController::class, 'register']);
+Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handleWebhook']);
 
 // Protected Sanctum Routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -41,4 +44,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orientations', [OrientationController::class, 'store']);
     Route::put('/orientations/{id}', [OrientationController::class, 'update']);
     Route::delete('/orientations/{id}', [OrientationController::class, 'destroy']);
+
+    Route::get('/telegram/status', [TelegramController::class, 'getStatus']);
+    Route::post('/telegram/test', [TelegramController::class, 'sendTestMessage']);
+    Route::post('/telegram/send', [TelegramController::class, 'sendMessage']);
+    Route::post('/telegram/poll-updates', [TelegramWebhookController::class, 'pollUpdates']);
 });
