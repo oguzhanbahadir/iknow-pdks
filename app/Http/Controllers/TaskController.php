@@ -3,10 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Models\User;
+use App\Services\TelegramService;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
+    protected TelegramService $telegramService;
+
+    public function __construct(TelegramService $telegramService)
+    {
+        $this->telegramService = $telegramService;
+    }
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -47,7 +56,7 @@ class TaskController extends Controller
             'title' => 'required|string',
         ]);
 
-        $user = $request->user();
+        $actor = $request->user();
 
         $task = Task::create([
             'title' => trim($request->title),
@@ -55,12 +64,31 @@ class TaskController extends Controller
             'status' => $request->status ?? 'TODO',
             'priority' => $request->priority ?? 'MEDIUM',
             'category' => $request->category ?? 'Geliştirme',
-            'assigned_user_id' => $request->assignedUserId ?? ($user ? $user->id : 1),
-            'created_by_id' => $user ? $user->id : null,
+            'assigned_user_id' => $request->assignedUserId ?? ($actor ? $actor->id : 1),
+            'created_by_id' => $actor ? $actor->id : null,
             'estimated_hours' => $request->estimatedHours ?? 4,
             'actual_hours' => $request->actualHours ?? 0,
             'task_date' => $request->taskDate ?? now()->toDateString(),
         ]);
+
+        $assignedUser = User::find($task->assigned_user_id);
+
+        // Send Telegram notification if created by someone else
+        if ($assignedUser && !empty($assignedUser->telegram_chat_id) && ($actor->id ?? 0) !== $assignedUser->id) {
+            $priorityMap = ['LOW' => '🔵 Düşük', 'MEDIUM' => '🟡 Orta', 'HIGH' => '🔴 Yüksek'];
+            $pr = $priorityMap[$task->priority] ?? $task->priority;
+            $actorName = $actor ? $actor->full_name : 'Sistem Yöneticisi';
+
+            $msg = "<b>📌 Size Yeni Bir Görev Atandı!</b>\n\n" .
+                "• <b>Görev:</b> {$task->title}\n" .
+                "• <b>Atayan:</b> {$actorName}\n" .
+                "• <b>Öncelik:</b> {$pr}\n" .
+                "• <b>Tahmini Efor:</b> {$task->estimated_hours} Saat\n" .
+                ($task->description ? "• <b>Açıklama:</b> <i>{$task->description}</i>\n" : "") . "\n" .
+                "<i>Görevlerinizi Telegram'dan /tasks yazarak takip edebilirsiniz.</i>";
+
+            $this->telegramService->sendMessage($assignedUser->telegram_chat_id, $msg);
+        }
 
         return response()->json(['success' => true, 'task' => $task], 201);
     }
@@ -68,6 +96,8 @@ class TaskController extends Controller
     public function update(Request $request, $id)
     {
         $task = Task::findOrFail($id);
+        $oldStatus = $task->status;
+        $oldAssignedId = $task->assigned_user_id;
 
         $task->update([
             'title' => $request->title ?? $task->title,
@@ -80,6 +110,42 @@ class TaskController extends Controller
             'actual_hours' => $request->actualHours ?? $task->actual_hours,
             'task_date' => $request->taskDate ?? $task->task_date,
         ]);
+
+        $actor = $request->user();
+        $assignedUser = User::find($task->assigned_user_id);
+
+        // Send Telegram notification if updated by someone else
+        if ($assignedUser && !empty($assignedUser->telegram_chat_id) && ($actor->id ?? 0) !== $assignedUser->id) {
+            $statusMap = [
+                'TODO' => '⏳ Yapılacak',
+                'IN_PROGRESS' => '🔄 Devam Ediyor',
+                'IN_REVIEW' => '👀 İncelemede',
+                'DONE' => '✅ Tamamlandı',
+            ];
+
+            if ($oldStatus !== $task->status) {
+                $oldSt = $statusMap[$oldStatus] ?? $oldStatus;
+                $newSt = $statusMap[$task->status] ?? $task->status;
+                $actorName = $actor ? $actor->full_name : 'Yönetici';
+
+                $msg = "<b>🔄 Görevinizin Statüsü Güncellendi!</b>\n\n" .
+                    "• <b>Görev:</b> {$task->title}\n" .
+                    "• <b>Güncelleyen:</b> {$actorName}\n" .
+                    "• <b>Eski Durum:</b> {$oldSt}\n" .
+                    "• <b>Yeni Durum:</b> <b>{$newSt}</b>";
+
+                $this->telegramService->sendMessage($assignedUser->telegram_chat_id, $msg);
+            } elseif ($oldAssignedId != $task->assigned_user_id) {
+                $actorName = $actor ? $actor->full_name : 'Yönetici';
+
+                $msg = "<b>📌 Size Bir Görev Atandı!</b>\n\n" .
+                    "• <b>Görev:</b> {$task->title}\n" .
+                    "• <b>Atayan:</b> {$actorName}\n" .
+                    "• <b>Durum:</b> {$task->status}";
+
+                $this->telegramService->sendMessage($assignedUser->telegram_chat_id, $msg);
+            }
+        }
 
         return response()->json(['success' => true, 'task' => $task]);
     }
