@@ -130,4 +130,126 @@ class UserController extends Controller
             ]
         ], 201);
     }
+
+    public function updateTelegramChatId(Request $request, $id)
+    {
+        if ($request->user() && $request->user()->role !== 'ADMIN') {
+            return response()->json(['error' => 'Yetkisiz erişim.'], 403);
+        }
+
+        $user = User::findOrFail($id);
+        $chatId = $request->telegramChatId ? trim($request->telegramChatId) : null;
+        $user->update(['telegram_chat_id' => $chatId]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$user->full_name} kullanıcısının Telegram Chat ID bilgisi güncellendi.",
+            'telegram_chat_id' => $chatId,
+        ]);
+    }
+
+    public function getProfile(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['error' => 'Oturum bulunamadı.'], 401);
+        }
+
+        $user->load(['scores', 'cvFiles']);
+
+        return response()->json([
+            'user' => [
+                'id' => (string) $user->id,
+                'email' => $user->email,
+                'fullName' => $user->full_name,
+                'role' => $user->role,
+                'department' => $user->department,
+                'phone' => $user->phone,
+                'telegram_chat_id' => $user->telegram_chat_id,
+                'avatar' => $user->avatar,
+                'targetCompany' => $user->target_company,
+                'isOnboarded' => $user->is_onboarded,
+                'isApproved' => $user->is_approved,
+                'primaryDomain' => $user->primary_domain,
+                'knownSkills' => $user->known_skills ?? [],
+                'preferredCareerPath' => $user->preferred_career_path,
+                'toolsUsed' => $user->tools_used ?? [],
+                'experienceLevel' => $user->experience_level,
+                'scores' => $user->scores ? $user->scores->map(function ($s) {
+                    return [
+                        'id' => (string) $s->id,
+                        'overallScore' => (float) $s->overall_score,
+                        'feedbackNote' => $s->feedback_note,
+                    ];
+                }) : [],
+                'cvFiles' => $user->cvFiles ? $user->cvFiles->map(function ($c) {
+                    return [
+                        'id' => (string) $c->id,
+                        'fileName' => $c->file_name,
+                        'fileUrl' => $c->file_url,
+                        'fileSize' => $c->file_size,
+                        'createdAt' => $c->created_at ? $c->created_at->format('d.m.Y H:i') : null,
+                    ];
+                }) : [],
+            ]
+        ]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['error' => 'Oturum bulunamadı.'], 401);
+        }
+
+        $request->validate([
+            'fullName' => 'required|string',
+            'phone' => 'nullable|string',
+            'department' => 'nullable|string',
+            'password' => 'nullable|string|min:6',
+        ]);
+
+        $data = [
+            'full_name' => trim($request->fullName),
+            'phone' => $request->phone,
+            'department' => $request->department ?? $user->department,
+            'primary_domain' => $request->primaryDomain ?? $user->primary_domain,
+            'known_skills' => $request->knownSkills ?? $user->known_skills,
+            'preferred_career_path' => $request->preferredCareerPath ?? $user->preferred_career_path,
+            'tools_used' => $request->toolsUsed ?? $user->tools_used,
+            'experience_level' => $request->experienceLevel ?? $user->experience_level,
+        ];
+
+        if ($request->filled('password')) {
+            $data['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
+        }
+
+        if ($request->has('telegramChatId')) {
+            $data['telegram_chat_id'] = $request->telegramChatId ? trim($request->telegramChatId) : null;
+        }
+
+        $user->update($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profil bilgileriniz başarıyla güncellendi.',
+            'user' => [
+                'id' => (string) $user->id,
+                'email' => $user->email,
+                'fullName' => $user->full_name,
+                'role' => $user->role,
+                'department' => $user->department,
+                'phone' => $user->phone,
+                'telegram_chat_id' => $user->telegram_chat_id,
+                'avatar' => $user->avatar,
+                'isOnboarded' => $user->is_onboarded,
+                'isApproved' => $user->is_approved,
+                'primaryDomain' => $user->primary_domain,
+                'knownSkills' => $user->known_skills ?? [],
+                'preferredCareerPath' => $user->preferred_career_path,
+                'toolsUsed' => $user->tools_used ?? [],
+                'experienceLevel' => $user->experience_level,
+            ]
+        ]);
+    }
 }
