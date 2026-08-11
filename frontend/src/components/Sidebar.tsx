@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, CheckSquare, Users, BarChart3, ShieldAlert, Award, BookOpen, Settings, User } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, FolderKanban, Users, BarChart3, ShieldAlert, Award, BookOpen, Settings, User } from 'lucide-react';
 
 interface SidebarProps {
   role: 'ADMIN' | 'USER';
@@ -20,6 +20,12 @@ export default function Sidebar({ role }: SidebarProps) {
       name: 'Görevler',
       href: '/tasks',
       icon: CheckSquare,
+      roles: ['ADMIN', 'USER'],
+    },
+    {
+      name: 'Projeler',
+      href: '/projects',
+      icon: FolderKanban,
       roles: ['ADMIN', 'USER'],
     },
     {

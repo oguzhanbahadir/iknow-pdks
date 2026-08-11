@@ -16,7 +16,7 @@ import {
   Tag,
   User as UserIcon,
 } from 'lucide-react';
-import { User, TaskItem, TaskComment } from '../types';
+import { User, TaskItem, TaskComment, Project } from '../types';
 import { getAuthHeaders } from '../utils/api';
 
 interface TasksPageProps {
@@ -26,6 +26,7 @@ interface TasksPageProps {
 export default function TasksPage({ currentUser }: TasksPageProps) {
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
 
@@ -47,6 +48,7 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
     priority: 'MEDIUM' as 'LOW' | 'MEDIUM' | 'HIGH',
     status: 'TODO' as 'TODO' | 'IN_PROGRESS' | 'IN_REVIEW' | 'DONE',
     assignedUserId: currentUser.id,
+    projectId: '',
     estimatedHours: 4,
     actualHours: 0,
     taskDate: new Date().toISOString().split('T')[0],
@@ -86,9 +88,21 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
     }
   };
 
+  const fetchProjects = async () => {
+    try {
+      const res = await fetch('/api/projects', { headers: getAuthHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setProjects(data.projects || []);
+      }
+    } catch (err) {
+      console.error('Fetch projects error:', err);
+    }
+  };
+
   useEffect(() => {
     async function init() {
-      await Promise.all([fetchTasks(), fetchUsers()]);
+      await Promise.all([fetchTasks(), fetchUsers(), fetchProjects()]);
       setLoading(false);
     }
     init();
@@ -164,6 +178,7 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
       priority: task.priority,
       status: task.status,
       assignedUserId: task.assignedUserId,
+      projectId: task.projectId || '',
       estimatedHours: task.estimatedHours || 4,
       actualHours: task.actualHours || 0,
       taskDate: task.taskDate ? new Date(task.taskDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
@@ -180,6 +195,7 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
       priority: 'MEDIUM',
       status: 'TODO',
       assignedUserId: currentUser.id,
+      projectId: '',
       estimatedHours: 4,
       actualHours: 0,
       taskDate: new Date().toISOString().split('T')[0],
@@ -473,6 +489,11 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                         </div>
 
                         <div>
+                          {t.project && (
+                            <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-indigo-100 inline-block mb-1">
+                              📁 {t.project.name}
+                            </span>
+                          )}
                           <h4 className="font-bold text-slate-900 text-sm">{t.title}</h4>
                           {t.description && (
                             <p className="text-xs text-slate-500 mt-1 line-clamp-2">{t.description}</p>
@@ -552,7 +573,14 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                   return (
                     <tr key={t.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-3 px-4">
-                        <div className="font-bold text-slate-900 text-sm">{t.title}</div>
+                        <div className="font-bold text-slate-900 text-sm flex items-center space-x-1.5">
+                          {t.project && (
+                            <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-indigo-100 shrink-0">
+                              📁 {t.project.name}
+                            </span>
+                          )}
+                          <span>{t.title}</span>
+                        </div>
                         <div className="text-[11px] text-slate-400 line-clamp-1">{t.description}</div>
                       </td>
                       <td className="py-3 px-4 font-medium">
@@ -659,6 +687,29 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="w-full py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-indigo-600"
                 />
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1 flex items-center justify-between">
+                  <span>📁 Bağlı Olduğu Proje (Projeye Taşı / Değiştir)</span>
+                  {formData.projectId && (
+                    <span className="text-[10.5px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
+                      Proje Bağlı
+                    </span>
+                  )}
+                </label>
+                <select
+                  value={formData.projectId}
+                  onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
+                  className="w-full py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-indigo-600 font-semibold"
+                >
+                  <option value="">-- Bağımsız Görev (Herhangi Bir Projeye Bağlı Değil) --</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      📁 {p.name} ({p.status})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>

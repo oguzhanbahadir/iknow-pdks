@@ -15,12 +15,18 @@ class Task extends Model
         'status',
         'priority',
         'category',
+        'project_id',
         'assigned_user_id',
         'created_by_id',
         'estimated_hours',
         'actual_hours',
         'task_date',
     ];
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class, 'project_id');
+    }
 
     public function assignedUser()
     {

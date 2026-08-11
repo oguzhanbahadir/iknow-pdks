@@ -7,6 +7,8 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import TasksPage from './pages/TasksPage';
+import ProjectsPage from './pages/ProjectsPage';
+import ProjectDetailPage from './pages/ProjectDetailPage';
 import InternsPage from './pages/InternsPage';
 import InternDetailPage from './pages/InternDetailPage';
 import EffortPage from './pages/EffortPage';
@@ -86,6 +88,8 @@ export default function App() {
               <Routes>
                 <Route path="/dashboard" element={<DashboardPage currentUser={currentUser} />} />
                 <Route path="/tasks" element={<TasksPage currentUser={currentUser} />} />
+                <Route path="/projects" element={<ProjectsPage currentUser={currentUser} />} />
+                <Route path="/projects/:id" element={<ProjectDetailPage currentUser={currentUser} />} />
                 <Route path="/team" element={<InternsPage currentUser={currentUser} />} />
                 <Route path="/team/:id" element={<InternDetailPage />} />
                 <Route path="/interns" element={<Navigate to="/team" replace />} />

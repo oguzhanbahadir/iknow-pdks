@@ -27,6 +27,11 @@ export interface TaskItem {
   category?: string;
   assignedUserId: string;
   createdById?: string;
+  projectId?: string;
+  project?: {
+    id: string;
+    name: string;
+  };
   estimatedHours: number;
   actualHours: number;
   taskDate?: string;
@@ -35,6 +40,58 @@ export interface TaskItem {
     fullName: string;
     email: string;
   };
+}
+
+export interface ProjectMember {
+  id: string;
+  userId: string;
+  requestedRole: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt?: string;
+  user?: {
+    id: string;
+    fullName: string;
+    email: string;
+    role: string;
+    department?: string;
+    avatar?: string;
+  };
+}
+
+export interface RoleRequirement {
+  role: string;
+  technologies: string[];
+  prerequisites: string[];
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  neededRoles: string[];
+  roleRequirements?: RoleRequirement[];
+  documentation?: string;
+  repositoryUrl?: string;
+  status: 'PLANNING' | 'IN_PROGRESS' | 'COMPLETED' | 'PAUSED';
+  createdById?: string;
+  createdAt?: string;
+  createdBy?: {
+    id: string;
+    fullName: string;
+  };
+  approvedCount?: number;
+  pendingCount?: number;
+  totalTasksCount?: number;
+  completedTasksCount?: number;
+  progressPercentage?: number;
+  canAccessContent?: boolean;
+  myMembership?: {
+    id: string;
+    requestedRole: string;
+    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  };
+  members?: ProjectMember[];
+  tasks?: TaskItem[];
 }
 
 export interface TaskComment {
