@@ -37,6 +37,21 @@ export interface TaskItem {
   };
 }
 
+export interface TaskComment {
+  id: string;
+  taskId: string;
+  userId: string;
+  message: string;
+  createdAt: string;
+  user?: {
+    id: string;
+    fullName: string;
+    email: string;
+    role: string;
+    avatar?: string;
+  };
+}
+
 export interface InternScoreItem {
   id: string;
   techScore: number;

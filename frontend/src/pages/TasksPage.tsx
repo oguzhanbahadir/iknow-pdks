@@ -9,8 +9,14 @@ import {
   X,
   Edit2,
   Trash2,
+  Eye,
+  Send,
+  MessageSquare,
+  Calendar,
+  Tag,
+  User as UserIcon,
 } from 'lucide-react';
-import { User, TaskItem } from '../types';
+import { User, TaskItem, TaskComment } from '../types';
 import { getAuthHeaders } from '../utils/api';
 
 interface TasksPageProps {
@@ -46,6 +52,13 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
     taskDate: new Date().toISOString().split('T')[0],
     category: 'Geliştirme',
   });
+
+  // Task Detail & Comments Modal State
+  const [detailTask, setDetailTask] = useState<TaskItem | null>(null);
+  const [comments, setComments] = useState<TaskComment[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [newCommentText, setNewCommentText] = useState('');
+  const [sendingComment, setSendingComment] = useState(false);
 
   const isAdmin = currentUser.role === 'ADMIN';
 
@@ -172,6 +185,49 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
       taskDate: new Date().toISOString().split('T')[0],
       category: 'Geliştirme',
     });
+  };
+
+  const openDetailModal = async (task: TaskItem) => {
+    setDetailTask(task);
+    setLoadingComments(true);
+    try {
+      const res = await fetch(`/api/tasks/${task.id}/comments`, {
+        headers: getAuthHeaders(),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setComments(data.comments || []);
+      }
+    } catch (err) {
+      console.error('Fetch comments error:', err);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const handleSendComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!detailTask || !newCommentText.trim() || sendingComment) return;
+
+    setSendingComment(true);
+    try {
+      const res = await fetch(`/api/tasks/${detailTask.id}/comments`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ message: newCommentText }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.comment) {
+          setComments((prev) => [...prev, data.comment]);
+        }
+        setNewCommentText('');
+      }
+    } catch (err) {
+      console.error('Send comment error:', err);
+    } finally {
+      setSendingComment(false);
+    }
   };
 
   const statusColumns: Array<{
@@ -393,6 +449,13 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                           </span>
                           <div className="flex items-center space-x-1">
                             <button
+                              onClick={() => openDetailModal(t)}
+                              className="text-slate-400 hover:text-indigo-600 p-1 transition-colors"
+                              title="Görev Detayı & Yazışmalar"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                            <button
                               onClick={() => openEditModal(t)}
                               className="text-slate-400 hover:text-indigo-600 p-1"
                               title="Düzenle"
@@ -531,6 +594,14 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                         </select>
                       </td>
                       <td className="py-3 px-4 text-right space-x-2">
+                        <button
+                          onClick={() => openDetailModal(t)}
+                          className="text-slate-500 hover:text-indigo-600 font-semibold text-xs inline-flex items-center space-x-1"
+                          title="Görev Detayı & Yazışmalar"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Detay</span>
+                        </button>
                         <button
                           onClick={() => openEditModal(t)}
                           className="text-slate-500 hover:text-indigo-600 font-semibold text-xs"
@@ -695,6 +766,194 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
           </div>
         </div>
       )}
+      {/* TASK DETAIL & CHAT MODAL */}
+      {detailTask && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl">
+                  <Eye className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-base">{detailTask.title}</h3>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        detailTask.priority === 'HIGH'
+                          ? 'bg-red-100 text-red-700'
+                          : detailTask.priority === 'MEDIUM'
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {detailTask.priority}
+                    </span>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
+                      {statusColumns.find((s) => s.key === detailTask.status)?.label || detailTask.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setDetailTask(null)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-200/60 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Content Scroll Area */}
+            <div className="p-5 space-y-5 overflow-y-auto flex-1 text-xs text-slate-700">
+              {/* Task Details Overview Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 border border-slate-100 rounded-xl p-3.5">
+                <div>
+                  <div className="text-slate-400 font-semibold text-[10px] flex items-center space-x-1 mb-1">
+                    <UserIcon className="w-3 h-3" />
+                    <span>Atanan Kişi</span>
+                  </div>
+                  <div className="font-bold text-slate-800">
+                    {users.find((u) => u.id === detailTask.assignedUserId)?.fullName || 'Atanmamış'}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-slate-400 font-semibold text-[10px] flex items-center space-x-1 mb-1">
+                    <Tag className="w-3 h-3" />
+                    <span>Kategori</span>
+                  </div>
+                  <div className="font-semibold text-slate-800">{detailTask.category || 'Genel'}</div>
+                </div>
+
+                <div>
+                  <div className="text-slate-400 font-semibold text-[10px] flex items-center space-x-1 mb-1">
+                    <Clock className="w-3 h-3" />
+                    <span>Harcanan / Planlanan</span>
+                  </div>
+                  <div className="font-bold text-slate-800">
+                    {detailTask.actualHours}h / {detailTask.estimatedHours}h
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-slate-400 font-semibold text-[10px] flex items-center space-x-1 mb-1">
+                    <Calendar className="w-3 h-3" />
+                    <span>Görev Tarihi</span>
+                  </div>
+                  <div className="font-semibold text-slate-800">
+                    {detailTask.taskDate ? new Date(detailTask.taskDate).toLocaleDateString('tr-TR') : '-'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Task Description */}
+              <div>
+                <h4 className="font-bold text-slate-800 text-xs mb-1.5">Açıklama & Detaylar</h4>
+                <div className="bg-white border border-slate-200 rounded-xl p-3 text-slate-600 leading-relaxed min-h-[60px]">
+                  {detailTask.description ? (
+                    detailTask.description
+                  ) : (
+                    <span className="text-slate-400 italic">Bu görev için herhangi bir açıklama girilmemiş.</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Discussion & Telegram Stream Section */}
+              <div className="space-y-3 pt-2 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <MessageSquare className="w-4 h-4 text-indigo-600" />
+                    <h4 className="font-bold text-slate-900 text-sm">Görev Yazışmaları & Notlar</h4>
+                    <span className="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      {comments.length}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-1 rounded-lg flex items-center space-x-1">
+                    <span>📱 Anlık Telegram Bildirimi</span>
+                  </span>
+                </div>
+
+                {/* Comments List */}
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3 max-h-64 overflow-y-auto">
+                  {loadingComments ? (
+                    <div className="py-6 text-center text-slate-400 font-medium flex items-center justify-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                      <span>Yazışmalar yükleniyor...</span>
+                    </div>
+                  ) : comments.length > 0 ? (
+                    comments.map((c) => {
+                      const isMe = c.userId === currentUser.id;
+                      return (
+                        <div
+                          key={c.id}
+                          className={`flex space-x-2.5 ${isMe ? 'flex-row-reverse space-x-reverse' : ''}`}
+                        >
+                          <div className="w-7 h-7 rounded-full bg-indigo-600 text-white font-bold text-[11px] flex items-center justify-center shrink-0 shadow-xs">
+                            {c.user?.fullName ? c.user.fullName.charAt(0).toUpperCase() : 'U'}
+                          </div>
+                          <div
+                            className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 shadow-xs ${
+                              isMe
+                                ? 'bg-indigo-600 text-white rounded-tr-none'
+                                : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between space-x-3 mb-1">
+                              <span
+                                className={`font-bold text-[11px] ${isMe ? 'text-indigo-100' : 'text-slate-900'}`}
+                              >
+                                {c.user?.fullName || 'Kullanıcı'}
+                              </span>
+                              <span
+                                className={`text-[9px] ${isMe ? 'text-indigo-200' : 'text-slate-400'}`}
+                              >
+                                {c.createdAt ? new Date(c.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : ''}
+                              </span>
+                            </div>
+                            <p className="leading-normal whitespace-pre-wrap text-[11.5px]">{c.message}</p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="py-6 text-center text-slate-400 italic">
+                      Henüz bu görev hakkında bir yazışma yapılmamış. İlk mesajı aşağıdan gönderebilirsiniz.
+                    </div>
+                  )}
+                </div>
+
+                {/* Comment Input Form */}
+                <form onSubmit={handleSendComment} className="flex items-center space-x-2 pt-1">
+                  <input
+                    type="text"
+                    placeholder="Görev hakkında bir mesaj veya not yazın (Telegram ile gider)..."
+                    value={newCommentText}
+                    onChange={(e) => setNewCommentText(e.target.value)}
+                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-600 transition-colors"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newCommentText.trim() || sendingComment}
+                    className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold px-4 py-2.5 rounded-xl flex items-center space-x-1.5 transition-colors shadow-xs shrink-0"
+                  >
+                    {sendingComment ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Send className="w-3.5 h-3.5" />
+                        <span>Gönder</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
