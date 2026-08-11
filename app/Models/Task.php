@@ -31,4 +31,10 @@ class Task extends Model
     {
         return $this->belongsTo(User::class, 'created_by_id');
     }
+
+    public function comments()
+    {
+        return $this->hasMany(TaskComment::class, 'task_id')->latest();
+    }
 }
+

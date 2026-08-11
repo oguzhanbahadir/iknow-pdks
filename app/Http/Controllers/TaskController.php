@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Models\TaskComment;
 use App\Models\User;
 use App\Services\TelegramService;
 use Illuminate\Http\Request;
@@ -172,4 +173,89 @@ class TaskController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    public function getComments($id)
+    {
+        $task = Task::findOrFail($id);
+        $comments = TaskComment::with('user')
+            ->where('task_id', $task->id)
+            ->oldest()
+            ->get()
+            ->map(function ($c) {
+                return [
+                    'id' => (string) $c->id,
+                    'taskId' => (string) $c->task_id,
+                    'userId' => (string) $c->user_id,
+                    'message' => $c->message,
+                    'createdAt' => $c->created_at ? $c->created_at->toISOString() : null,
+                    'user' => $c->user ? [
+                        'id' => (string) $c->user->id,
+                        'fullName' => $c->user->full_name,
+                        'email' => $c->user->email,
+                        'role' => $c->user->role,
+                        'avatar' => $c->user->avatar,
+                    ] : null,
+                ];
+            });
+
+        return response()->json(['comments' => $comments]);
+    }
+
+    public function storeComment(Request $request, $id)
+    {
+        $request->validate([
+            'message' => 'required|string',
+        ]);
+
+        $task = Task::with(['assignedUser', 'createdBy'])->findOrFail($id);
+        $actor = $request->user();
+
+        $comment = TaskComment::create([
+            'task_id' => $task->id,
+            'user_id' => $actor->id,
+            'message' => trim($request->message),
+        ]);
+
+        // Telegram Notifications for task commentary
+        $recipients = [];
+        if ($task->assignedUser && $task->assignedUser->id !== $actor->id && !empty($task->assignedUser->telegram_chat_id)) {
+            $recipients[] = $task->assignedUser;
+        }
+        if ($task->createdBy && $task->createdBy->id !== $actor->id && !empty($task->createdBy->telegram_chat_id)) {
+            if (!$task->assignedUser || $task->createdBy->id !== $task->assignedUser->id) {
+                $recipients[] = $task->createdBy;
+            }
+        }
+
+        foreach ($recipients as $recipient) {
+            $msg = "<b>💬 Görevinize Yeni Bir Yorum Yapıldı!</b>\n\n" .
+                "• <b>Görev:</b> {$task->title}\n" .
+                "• <b>Yazan:</b> {$actor->full_name}\n" .
+                "• <b>Yorum:</b> <i>" . htmlspecialchars($comment->message) . "</i>\n\n" .
+                "<i>Görevlerinizi ve yazışmaları PDKS Portal üzerinden takip edebilirsiniz.</i>";
+
+            $this->telegramService->sendMessage($recipient->telegram_chat_id, $msg);
+        }
+
+        $comment->load('user');
+
+        return response()->json([
+            'success' => true,
+            'comment' => [
+                'id' => (string) $comment->id,
+                'taskId' => (string) $comment->task_id,
+                'userId' => (string) $comment->user_id,
+                'message' => $comment->message,
+                'createdAt' => $comment->created_at ? $comment->created_at->toISOString() : null,
+                'user' => $comment->user ? [
+                    'id' => (string) $comment->user->id,
+                    'fullName' => $comment->user->full_name,
+                    'email' => $comment->user->email,
+                    'role' => $comment->user->role,
+                    'avatar' => $comment->user->avatar,
+                ] : null,
+            ]
+        ], 201);
+    }
 }
+
