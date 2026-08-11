@@ -253,11 +253,11 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
     textColor: string;
     borderColor: string;
   }> = [
-    { key: 'TODO', label: 'Yapılacak', bgColor: 'bg-slate-100', textColor: 'text-slate-800', borderColor: 'border-slate-300' },
-    { key: 'IN_PROGRESS', label: 'Devam Ediyor', bgColor: 'bg-blue-50', textColor: 'text-blue-900', borderColor: 'border-blue-200' },
-    { key: 'IN_REVIEW', label: 'İncelemede', bgColor: 'bg-amber-50', textColor: 'text-amber-900', borderColor: 'border-amber-200' },
-    { key: 'DONE', label: 'Tamamlandı', bgColor: 'bg-emerald-50', textColor: 'text-emerald-900', borderColor: 'border-emerald-200' },
-  ];
+      { key: 'TODO', label: 'Yapılacak', bgColor: 'bg-slate-100', textColor: 'text-slate-800', borderColor: 'border-slate-300' },
+      { key: 'IN_PROGRESS', label: 'Devam Ediyor', bgColor: 'bg-blue-50', textColor: 'text-blue-900', borderColor: 'border-blue-200' },
+      { key: 'IN_REVIEW', label: 'İncelemede', bgColor: 'bg-amber-50', textColor: 'text-amber-900', borderColor: 'border-amber-200' },
+      { key: 'DONE', label: 'Tamamlandı', bgColor: 'bg-emerald-50', textColor: 'text-emerald-900', borderColor: 'border-emerald-200' },
+    ];
 
   const filteredTasks = tasks.filter((t) => {
     const matchesSearch =
@@ -305,7 +305,7 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-4 py-2.5 rounded-xl flex items-center space-x-1.5 transition-colors shadow-xs"
           >
             <Plus className="w-4 h-4" />
-            <span>+ Yeni Görev Ekle</span>
+            <span>Yeni Görev Ekle</span>
           </button>
         </div>
       </div>
@@ -316,22 +316,20 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
           <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button
               onClick={() => setViewMode('kanban')}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                viewMode === 'kanban'
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${viewMode === 'kanban'
                   ? 'bg-white text-indigo-700 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
-              }`}
+                }`}
             >
               <Kanban className="w-3.5 h-3.5" />
               <span>Kanban Panosu</span>
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                viewMode === 'list'
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${viewMode === 'list'
                   ? 'bg-white text-indigo-700 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
-              }`}
+                }`}
             >
               <List className="w-3.5 h-3.5" />
               <span>Liste Görünümü</span>
@@ -414,11 +412,10 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                     handleUpdateStatus(taskId, col.key as TaskItem['status']);
                   }
                 }}
-                className={`border rounded-2xl p-4 flex flex-col min-h-[500px] transition-all duration-150 ${
-                  isOver
+                className={`border rounded-2xl p-4 flex flex-col min-h-[500px] transition-all duration-150 ${isOver
                     ? 'bg-indigo-50/80 border-indigo-400 ring-2 ring-indigo-400 ring-offset-2'
                     : 'bg-slate-100/70 border-slate-200'
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-3">
                   <div className="flex items-center space-x-2">
@@ -445,25 +442,33 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                           setDraggedTaskId(null);
                           setDragOverColumn(null);
                         }}
-                        className={`bg-white border rounded-xl p-4 shadow-xs hover:shadow-md transition-all space-y-3 cursor-grab active:cursor-grabbing select-none ${
-                          isDragging
+                        className={`bg-white border rounded-xl p-4 shadow-xs hover:shadow-md transition-all space-y-3 cursor-grab active:cursor-grabbing select-none ${isDragging
                             ? 'opacity-40 scale-95 border-dashed border-indigo-400 bg-indigo-50/40'
                             : 'border-slate-200'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between">
                           <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                              t.priority === 'HIGH'
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${t.priority === 'HIGH'
                                 ? 'bg-red-100 text-red-700'
                                 : t.priority === 'MEDIUM'
-                                ? 'bg-amber-100 text-amber-700'
-                                : 'bg-slate-100 text-slate-600'
-                            }`}
+                                  ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-slate-100 text-slate-600'
+                              }`}
                           >
                             {t.priority}
                           </span>
                           <div className="flex items-center space-x-1">
+                            {t.commentsCount && t.commentsCount > 0 ? (
+                              <button
+                                onClick={() => openDetailModal(t)}
+                                className="flex items-center space-x-1 text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full hover:bg-indigo-100 transition-colors shadow-2xs shrink-0"
+                                title={`${t.commentsCount} yorum var - Yazışmaları gör`}
+                              >
+                                <MessageSquare className="w-3 h-3 text-indigo-600 fill-indigo-100" />
+                                <span>{t.commentsCount}</span>
+                              </button>
+                            ) : null}
                             <button
                               onClick={() => openDetailModal(t)}
                               className="text-slate-400 hover:text-indigo-600 p-1 transition-colors"
@@ -573,13 +578,23 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                   return (
                     <tr key={t.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-3 px-4">
-                        <div className="font-bold text-slate-900 text-sm flex items-center space-x-1.5">
+                        <div className="font-bold text-slate-900 text-sm flex items-center space-x-2 flex-wrap gap-y-1">
                           {t.project && (
                             <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-indigo-100 shrink-0">
                               📁 {t.project.name}
                             </span>
                           )}
                           <span>{t.title}</span>
+                          {t.commentsCount && t.commentsCount > 0 ? (
+                            <button
+                              onClick={() => openDetailModal(t)}
+                              className="inline-flex items-center space-x-1 text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full hover:bg-indigo-100 transition-colors shrink-0"
+                              title={`${t.commentsCount} yorum var - Yazışmaları görüntüle`}
+                            >
+                              <MessageSquare className="w-3 h-3 text-indigo-600 fill-indigo-100" />
+                              <span>{t.commentsCount} Yorum</span>
+                            </button>
+                          ) : null}
                         </div>
                         <div className="text-[11px] text-slate-400 line-clamp-1">{t.description}</div>
                       </td>
@@ -593,13 +608,12 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                       </td>
                       <td className="py-3 px-4">
                         <span
-                          className={`font-bold px-2 py-0.5 rounded-full text-[10px] ${
-                            t.priority === 'HIGH'
+                          className={`font-bold px-2 py-0.5 rounded-full text-[10px] ${t.priority === 'HIGH'
                               ? 'bg-red-100 text-red-700'
                               : t.priority === 'MEDIUM'
-                              ? 'bg-amber-100 text-amber-700'
-                              : 'bg-slate-100 text-slate-600'
-                          }`}
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-slate-100 text-slate-600'
+                            }`}
                         >
                           {t.priority}
                         </span>
@@ -831,13 +845,12 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                   <h3 className="font-bold text-slate-900 text-base">{detailTask.title}</h3>
                   <div className="flex items-center space-x-2 mt-1">
                     <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        detailTask.priority === 'HIGH'
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${detailTask.priority === 'HIGH'
                           ? 'bg-red-100 text-red-700'
                           : detailTask.priority === 'MEDIUM'
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-slate-100 text-slate-600'
-                      }`}
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-slate-100 text-slate-600'
+                        }`}
                     >
                       {detailTask.priority}
                     </span>
@@ -945,11 +958,10 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                             {c.user?.fullName ? c.user.fullName.charAt(0).toUpperCase() : 'U'}
                           </div>
                           <div
-                            className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 shadow-xs ${
-                              isMe
+                            className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 shadow-xs ${isMe
                                 ? 'bg-indigo-600 text-white rounded-tr-none'
                                 : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none'
-                            }`}
+                              }`}
                           >
                             <div className="flex items-center justify-between space-x-3 mb-1">
                               <span

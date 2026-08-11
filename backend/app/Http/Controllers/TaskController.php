@@ -21,7 +21,7 @@ class TaskController extends Controller
     {
         $user = $request->user();
 
-        $query = Task::with(['assignedUser', 'createdBy', 'project:id,name']);
+        $query = Task::with(['assignedUser', 'createdBy', 'project:id,name'])->withCount('comments');
 
         if ($request->has('project_id') && !empty($request->project_id)) {
             $query->where('project_id', $request->project_id);
@@ -49,6 +49,7 @@ class TaskController extends Controller
                 'estimatedHours' => (float) $t->estimated_hours,
                 'actualHours' => (float) $t->actual_hours,
                 'taskDate' => $t->task_date,
+                'commentsCount' => (int) ($t->comments_count ?? 0),
                 'assignedUser' => $t->assignedUser ? [
                     'id' => (string) $t->assignedUser->id,
                     'fullName' => $t->assignedUser->full_name,

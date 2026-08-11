@@ -35,6 +35,7 @@ export interface TaskItem {
   estimatedHours: number;
   actualHours: number;
   taskDate?: string;
+  commentsCount?: number;
   assignedUser?: {
     id: string;
     fullName: string;

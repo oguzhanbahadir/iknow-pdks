@@ -98,6 +98,19 @@ export default function ProjectDetailPage({ currentUser }: ProjectDetailPageProp
     { key: 'DONE', label: 'Tamamlandı', bgColor: 'bg-emerald-50', textColor: 'text-emerald-900', borderColor: 'border-emerald-200' },
   ];
 
+  const [roleReqInputs, setRoleReqInputs] = useState<Record<string, { techText: string; preText: string }>>({});
+
+  const initRoleReqInputs = (reqs: RoleRequirement[]) => {
+    const map: Record<string, { techText: string; preText: string }> = {};
+    (reqs || []).forEach((r) => {
+      map[r.role] = {
+        techText: r.technologies ? r.technologies.join(', ') : '',
+        preText: r.prerequisites ? r.prerequisites.join(', ') : '',
+      };
+    });
+    setRoleReqInputs(map);
+  };
+
   const loadProject = async () => {
     if (!id) return;
     try {
@@ -107,15 +120,17 @@ export default function ProjectDetailPage({ currentUser }: ProjectDetailPageProp
       if (res.ok) {
         const data = await res.json();
         setProject(data.project);
+        const reqs = data.project.roleRequirements || [];
         setProjectFormData({
           name: data.project.name,
           description: data.project.description || '',
           neededRoles: data.project.neededRoles || [],
-          roleRequirements: data.project.roleRequirements || [],
+          roleRequirements: reqs,
           documentation: data.project.documentation || '',
           repositoryUrl: data.project.repositoryUrl || '',
           status: data.project.status,
         });
+        initRoleReqInputs(reqs);
       } else {
         setErrorMsg('Proje detayları yüklenemedi veya proje bulunamadı.');
       }
@@ -903,6 +918,16 @@ export default function ProjectDetailPage({ currentUser }: ProjectDetailPageProp
                                   </span>
 
                                   <div className="flex items-center space-x-1">
+                                    {t.commentsCount && t.commentsCount > 0 ? (
+                                      <button
+                                        onClick={() => openDetailTaskModal(t)}
+                                        className="flex items-center space-x-1 text-[9.5px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded-full hover:bg-indigo-100 transition-colors shadow-2xs shrink-0"
+                                        title={`${t.commentsCount} yorum var - Yazışmaları gör`}
+                                      >
+                                        <MessageSquare className="w-3 h-3 text-indigo-600 fill-indigo-100" />
+                                        <span>{t.commentsCount}</span>
+                                      </button>
+                                    ) : null}
                                     <button
                                       onClick={() => openDetailTaskModal(t)}
                                       className="text-slate-400 hover:text-indigo-600 p-1 transition-colors"
@@ -1005,7 +1030,19 @@ export default function ProjectDetailPage({ currentUser }: ProjectDetailPageProp
                         return (
                           <tr key={t.id} className="hover:bg-slate-50 transition-colors">
                             <td className="py-3 px-4">
-                              <div className="font-bold text-slate-900 text-xs">{t.title}</div>
+                              <div className="font-bold text-slate-900 text-xs flex items-center space-x-1.5 flex-wrap gap-y-1">
+                                <span>{t.title}</span>
+                                {t.commentsCount && t.commentsCount > 0 ? (
+                                  <button
+                                    onClick={() => openDetailTaskModal(t)}
+                                    className="inline-flex items-center space-x-1 text-[9.5px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full hover:bg-indigo-100 transition-colors shrink-0"
+                                    title={`${t.commentsCount} yorum var - Yazışmaları görüntüle`}
+                                  >
+                                    <MessageSquare className="w-3 h-3 text-indigo-600 fill-indigo-100" />
+                                    <span>{t.commentsCount} Yorum</span>
+                                  </button>
+                                ) : null}
+                              </div>
                               <div className="text-[11px] text-slate-400 line-clamp-1">{t.description}</div>
                             </td>
                             <td className="py-3 px-4 font-medium">
@@ -1085,24 +1122,48 @@ export default function ProjectDetailPage({ currentUser }: ProjectDetailPageProp
       {/* EDIT / CREATE PROJECT MODAL (ADMIN) */}
       {isEditModalOpen && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-4xl w-full p-6 md:p-8 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-base">Projeyi Düzenle</h3>
-              <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1">
+              <h3 className="font-bold text-slate-900 text-lg">Projeyi Düzenle</h3>
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleUpdateProject} className="space-y-4 text-xs">
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1">Proje Adı *</label>
-                <input
-                  type="text"
-                  required
-                  value={projectFormData.name}
-                  onChange={(e) => setProjectFormData({ ...projectFormData, name: e.target.value })}
-                  className="w-full py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-indigo-600"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <label className="font-semibold text-slate-700 block mb-1">Proje Adı *</label>
+                  <input
+                    type="text"
+                    required
+                    value={projectFormData.name}
+                    onChange={(e) => setProjectFormData({ ...projectFormData, name: e.target.value })}
+                    className="w-full py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-indigo-600 font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">Proje Durumu</label>
+                  <select
+                    value={projectFormData.status}
+                    onChange={(e) =>
+                      setProjectFormData({
+                        ...projectFormData,
+                        status: e.target.value as Project['status'],
+                      })
+                    }
+                    className="w-full py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-semibold focus:outline-none"
+                  >
+                    <option value="PLANNING">Planlama Aşamasında (PLANNING)</option>
+                    <option value="IN_PROGRESS">Devam Ediyor (IN_PROGRESS)</option>
+                    <option value="COMPLETED">Tamamlandı (COMPLETED)</option>
+                    <option value="PAUSED">Duraklatıldı (PAUSED)</option>
+                  </select>
+                </div>
               </div>
 
               <div>
@@ -1113,25 +1174,6 @@ export default function ProjectDetailPage({ currentUser }: ProjectDetailPageProp
                   onChange={(e) => setProjectFormData({ ...projectFormData, description: e.target.value })}
                   className="w-full py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-indigo-600"
                 />
-              </div>
-
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1">Proje Durumu</label>
-                <select
-                  value={projectFormData.status}
-                  onChange={(e) =>
-                    setProjectFormData({
-                      ...projectFormData,
-                      status: e.target.value as Project['status'],
-                    })
-                  }
-                  className="w-full py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-semibold focus:outline-none"
-                >
-                  <option value="PLANNING">Planlama Aşamasında (PLANNING)</option>
-                  <option value="IN_PROGRESS">Devam Ediyor (IN_PROGRESS)</option>
-                  <option value="COMPLETED">Tamamlandı (COMPLETED)</option>
-                  <option value="PAUSED">Duraklatıldı (PAUSED)</option>
-                </select>
               </div>
 
               <div>
@@ -1153,18 +1195,18 @@ export default function ProjectDetailPage({ currentUser }: ProjectDetailPageProp
                     </span>
                   ))}
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex space-x-2 max-w-md">
                   <input
                     type="text"
                     placeholder="Örn: QA Tester..."
                     value={customRoleInput}
                     onChange={(e) => setCustomRoleInput(e.target.value)}
-                    className="flex-1 py-1.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none"
+                    className="flex-1 py-1.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-indigo-600"
                   />
                   <button
                     type="button"
                     onClick={handleAddRoleChip}
-                    className="px-3 py-1.5 bg-slate-200 text-slate-800 font-semibold rounded-xl"
+                    className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold rounded-xl"
                   >
                     Ekle
                   </button>
@@ -1173,65 +1215,98 @@ export default function ProjectDetailPage({ currentUser }: ProjectDetailPageProp
 
               {/* Role Requirements Form Builder */}
               {projectFormData.neededRoles.length > 0 && (
-                <div>
-                  <label className="font-semibold text-slate-700 block mb-1">
+                <div className="space-y-2 pt-1">
+                  <label className="font-semibold text-slate-700 block">
                     Rol Bazlı Teknoloji & Beklenen Yetkinlik Detayları
                   </label>
-                  <div className="space-y-3 bg-slate-50 border border-slate-200 rounded-xl p-3 max-h-60 overflow-y-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 bg-slate-50 border border-slate-200 rounded-xl p-3.5 max-h-72 overflow-y-auto">
                     {projectFormData.neededRoles.map((role, rIdx) => {
                       const existingReq = projectFormData.roleRequirements.find((r) => r.role === role) || {
                         role,
                         technologies: [],
                         prerequisites: [],
                       };
+
+                      const currentTechText =
+                        roleReqInputs[role]?.techText !== undefined
+                          ? roleReqInputs[role].techText
+                          : existingReq.technologies.join(', ');
+
+                      const currentPreText =
+                        roleReqInputs[role]?.preText !== undefined
+                          ? roleReqInputs[role].preText
+                          : existingReq.prerequisites.join(', ');
+
                       return (
-                        <div key={rIdx} className="bg-white border border-slate-200 rounded-lg p-3 space-y-2">
-                          <div className="font-bold text-indigo-700 text-xs flex items-center space-x-1">
-                            <Tag className="w-3.5 h-3.5" />
+                        <div key={rIdx} className="bg-white border border-slate-200 rounded-xl p-3.5 space-y-2.5 shadow-xs">
+                          <div className="font-bold text-indigo-900 text-xs flex items-center space-x-1.5 border-b border-slate-100 pb-1.5">
+                            <Tag className="w-3.5 h-3.5 text-indigo-600" />
                             <span>{role}</span>
                           </div>
                           <div>
-                            <label className="text-[10px] text-slate-500 font-semibold block mb-0.5">
+                            <label className="text-[10.5px] text-slate-600 font-semibold block mb-1">
                               Kullanılacak Teknolojiler & Araçlar (Virgülle ayırın)
                             </label>
                             <input
                               type="text"
                               placeholder="Örn: React, TypeScript, Vite, TailwindCSS"
-                              value={existingReq.technologies.join(', ')}
+                              value={currentTechText}
                               onChange={(e) => {
-                                const techs = e.target.value.split(',').map((s) => s.trim()).filter(Boolean);
+                                const val = e.target.value;
+                                setRoleReqInputs((prev) => ({
+                                  ...prev,
+                                  [role]: {
+                                    techText: val,
+                                    preText: prev[role]?.preText !== undefined ? prev[role].preText : currentPreText,
+                                  },
+                                }));
+
+                                const techs = val.split(',').map((s) => s.trim()).filter(Boolean);
+                                const pres = currentPreText.split(',').map((s) => s.trim()).filter(Boolean);
+
                                 const updated = [...projectFormData.roleRequirements];
                                 const foundIdx = updated.findIndex((r) => r.role === role);
                                 if (foundIdx >= 0) {
-                                  updated[foundIdx] = { ...updated[foundIdx], technologies: techs };
+                                  updated[foundIdx] = { role, technologies: techs, prerequisites: pres };
                                 } else {
-                                  updated.push({ role, technologies: techs, prerequisites: existingReq.prerequisites });
+                                  updated.push({ role, technologies: techs, prerequisites: pres });
                                 }
                                 setProjectFormData({ ...projectFormData, roleRequirements: updated });
                               }}
-                              className="w-full py-1 px-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none"
+                              className="w-full py-1.5 px-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-600"
                             />
                           </div>
                           <div>
-                            <label className="text-[10px] text-slate-500 font-semibold block mb-0.5">
+                            <label className="text-[10.5px] text-slate-600 font-semibold block mb-1">
                               Bilinmesi / Hakim Olunması Gereken Konular (Virgülle ayırın)
                             </label>
                             <input
                               type="text"
                               placeholder="Örn: State Management, REST API Entegrasyonu, Responsive UI"
-                              value={existingReq.prerequisites.join(', ')}
+                              value={currentPreText}
                               onChange={(e) => {
-                                const pres = e.target.value.split(',').map((s) => s.trim()).filter(Boolean);
+                                const val = e.target.value;
+                                setRoleReqInputs((prev) => ({
+                                  ...prev,
+                                  [role]: {
+                                    techText: prev[role]?.techText !== undefined ? prev[role].techText : currentTechText,
+                                    preText: val,
+                                  },
+                                }));
+
+                                const pres = val.split(',').map((s) => s.trim()).filter(Boolean);
+                                const techs = currentTechText.split(',').map((s) => s.trim()).filter(Boolean);
+
                                 const updated = [...projectFormData.roleRequirements];
                                 const foundIdx = updated.findIndex((r) => r.role === role);
                                 if (foundIdx >= 0) {
-                                  updated[foundIdx] = { ...updated[foundIdx], prerequisites: pres };
+                                  updated[foundIdx] = { role, technologies: techs, prerequisites: pres };
                                 } else {
-                                  updated.push({ role, technologies: existingReq.technologies, prerequisites: pres });
+                                  updated.push({ role, technologies: techs, prerequisites: pres });
                                 }
                                 setProjectFormData({ ...projectFormData, roleRequirements: updated });
                               }}
-                              className="w-full py-1 px-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none"
+                              className="w-full py-1.5 px-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-600"
                             />
                           </div>
                         </div>

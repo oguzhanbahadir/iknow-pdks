@@ -76,47 +76,66 @@ export default function ProjectsPage({ currentUser }: ProjectsPageProps) {
     fetchProjects();
   }, []);
 
+  const [roleReqInputs, setRoleReqInputs] = useState<Record<string, { techText: string; preText: string }>>({});
+
+  const initRoleReqInputs = (reqs: RoleRequirement[]) => {
+    const map: Record<string, { techText: string; preText: string }> = {};
+    reqs.forEach((r) => {
+      map[r.role] = {
+        techText: r.technologies ? r.technologies.join(', ') : '',
+        preText: r.prerequisites ? r.prerequisites.join(', ') : '',
+      };
+    });
+    setRoleReqInputs(map);
+  };
+
   const openCreateProjectModal = () => {
+    const defaultRoles = ['Frontend Geliştirici', 'Backend Geliştirici', 'DevOps'];
+    const defaultReqs: RoleRequirement[] = [
+      {
+        role: 'Frontend Geliştirici',
+        technologies: ['React', 'TypeScript', 'Vite', 'TailwindCSS'],
+        prerequisites: ['State Management', 'REST API Entegrasyonu', 'Responsive UI'],
+      },
+      {
+        role: 'Backend Geliştirici',
+        technologies: ['PHP 8.2+', 'Laravel 11', 'MySQL'],
+        prerequisites: ['Eloquent ORM', 'Sanctum Auth', 'API Tasarımı'],
+      },
+      {
+        role: 'DevOps',
+        technologies: ['Docker', 'Nginx', 'GitHub Actions'],
+        prerequisites: ['CI/CD Pipeline', 'Sunucu Yönetimi'],
+      },
+    ];
+
     setEditingProject(null);
     setProjectFormData({
       name: '',
       description: '',
-      neededRoles: ['Frontend Geliştirici', 'Backend Geliştirici', 'DevOps'],
-      roleRequirements: [
-        {
-          role: 'Frontend Geliştirici',
-          technologies: ['React', 'TypeScript', 'Vite', 'TailwindCSS'],
-          prerequisites: ['State Management', 'REST API Entegrasyonu', 'Responsive UI'],
-        },
-        {
-          role: 'Backend Geliştirici',
-          technologies: ['PHP 8.2+', 'Laravel 11', 'MySQL'],
-          prerequisites: ['Eloquent ORM', 'Sanctum Auth', 'API Tasarımı'],
-        },
-        {
-          role: 'DevOps',
-          technologies: ['Docker', 'Nginx', 'GitHub Actions'],
-          prerequisites: ['CI/CD Pipeline', 'Sunucu Yönetimi'],
-        },
-      ],
+      neededRoles: defaultRoles,
+      roleRequirements: defaultReqs,
       documentation: '',
       repositoryUrl: '',
       status: 'PLANNING',
     });
+    initRoleReqInputs(defaultReqs);
     setIsProjectModalOpen(true);
   };
 
   const openEditProjectModal = (p: Project) => {
     setEditingProject(p);
+    const reqs = p.roleRequirements || [];
     setProjectFormData({
       name: p.name,
       description: p.description || '',
       neededRoles: p.neededRoles || ['Frontend Geliştirici', 'Backend Geliştirici'],
-      roleRequirements: p.roleRequirements || [],
+      roleRequirements: reqs,
       documentation: p.documentation || '',
       repositoryUrl: p.repositoryUrl || '',
       status: p.status,
     });
+    initRoleReqInputs(reqs);
     setIsProjectModalOpen(true);
   };
 
@@ -525,30 +544,51 @@ export default function ProjectsPage({ currentUser }: ProjectsPageProps) {
       {/* CREATE / EDIT PROJECT MODAL (ADMIN) */}
       {isProjectModalOpen && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-4xl w-full p-6 md:p-8 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-base">
+              <h3 className="font-bold text-slate-900 text-lg">
                 {editingProject ? 'Projeyi Düzenle' : 'Yeni Proje Oluştur'}
               </h3>
               <button
                 onClick={() => setIsProjectModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleSaveProject} className="space-y-4 text-xs">
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1">Proje Adı *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Örn: iKnow Mobil Mobil Uygulaması & PDKS V2"
-                  value={projectFormData.name}
-                  onChange={(e) => setProjectFormData({ ...projectFormData, name: e.target.value })}
-                  className="w-full py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-indigo-600"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <label className="font-semibold text-slate-700 block mb-1">Proje Adı *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Örn: iKnow Mobil Uygulaması & PDKS V2"
+                    value={projectFormData.name}
+                    onChange={(e) => setProjectFormData({ ...projectFormData, name: e.target.value })}
+                    className="w-full py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-indigo-600 font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">Proje Durumu</label>
+                  <select
+                    value={projectFormData.status}
+                    onChange={(e) =>
+                      setProjectFormData({
+                        ...projectFormData,
+                        status: e.target.value as Project['status'],
+                      })
+                    }
+                    className="w-full py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-indigo-600 font-semibold"
+                  >
+                    <option value="PLANNING">Planlama Aşamasında (PLANNING)</option>
+                    <option value="IN_PROGRESS">Devam Ediyor (IN_PROGRESS)</option>
+                    <option value="COMPLETED">Tamamlandı (COMPLETED)</option>
+                    <option value="PAUSED">Duraklatıldı (PAUSED)</option>
+                  </select>
+                </div>
               </div>
 
               <div>
@@ -560,25 +600,6 @@ export default function ProjectsPage({ currentUser }: ProjectsPageProps) {
                   onChange={(e) => setProjectFormData({ ...projectFormData, description: e.target.value })}
                   className="w-full py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-indigo-600"
                 />
-              </div>
-
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1">Proje Durumu</label>
-                <select
-                  value={projectFormData.status}
-                  onChange={(e) =>
-                    setProjectFormData({
-                      ...projectFormData,
-                      status: e.target.value as Project['status'],
-                    })
-                  }
-                  className="w-full py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-indigo-600 font-semibold"
-                >
-                  <option value="PLANNING">Planlama Aşamasında (PLANNING)</option>
-                  <option value="IN_PROGRESS">Devam Ediyor (IN_PROGRESS)</option>
-                  <option value="COMPLETED">Tamamlandı (COMPLETED)</option>
-                  <option value="PAUSED">Duraklatıldı (PAUSED)</option>
-                </select>
               </div>
 
               {/* Needed Roles Chips Selector */}
@@ -603,7 +624,7 @@ export default function ProjectsPage({ currentUser }: ProjectsPageProps) {
                     </span>
                   ))}
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex space-x-2 max-w-md">
                   <input
                     type="text"
                     placeholder="Örn: Mobile Developer, Full Stack..."
@@ -623,65 +644,98 @@ export default function ProjectsPage({ currentUser }: ProjectsPageProps) {
 
               {/* Role Requirements Form Builder */}
               {projectFormData.neededRoles.length > 0 && (
-                <div>
-                  <label className="font-semibold text-slate-700 block mb-1">
+                <div className="space-y-2 pt-1">
+                  <label className="font-semibold text-slate-700 block">
                     Rol Bazlı Teknoloji & Beklenen Yetkinlik Detayları
                   </label>
-                  <div className="space-y-3 bg-slate-50 border border-slate-200 rounded-xl p-3 max-h-56 overflow-y-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 bg-slate-50 border border-slate-200 rounded-xl p-3.5 max-h-72 overflow-y-auto">
                     {projectFormData.neededRoles.map((role, rIdx) => {
                       const existingReq = projectFormData.roleRequirements.find((r) => r.role === role) || {
                         role,
                         technologies: [],
                         prerequisites: [],
                       };
+
+                      const currentTechText =
+                        roleReqInputs[role]?.techText !== undefined
+                          ? roleReqInputs[role].techText
+                          : existingReq.technologies.join(', ');
+
+                      const currentPreText =
+                        roleReqInputs[role]?.preText !== undefined
+                          ? roleReqInputs[role].preText
+                          : existingReq.prerequisites.join(', ');
+
                       return (
-                        <div key={rIdx} className="bg-white border border-slate-200 rounded-lg p-3 space-y-2">
-                          <div className="font-bold text-indigo-700 text-xs flex items-center space-x-1">
-                            <Tag className="w-3.5 h-3.5" />
+                        <div key={rIdx} className="bg-white border border-slate-200 rounded-xl p-3.5 space-y-2.5 shadow-xs">
+                          <div className="font-bold text-indigo-900 text-xs flex items-center space-x-1.5 border-b border-slate-100 pb-1.5">
+                            <Tag className="w-3.5 h-3.5 text-indigo-600" />
                             <span>{role}</span>
                           </div>
                           <div>
-                            <label className="text-[10px] text-slate-500 font-semibold block mb-0.5">
+                            <label className="text-[10.5px] text-slate-600 font-semibold block mb-1">
                               Kullanılacak Teknolojiler & Araçlar (Virgülle ayırın)
                             </label>
                             <input
                               type="text"
                               placeholder="Örn: React, TypeScript, Vite, TailwindCSS"
-                              value={existingReq.technologies.join(', ')}
+                              value={currentTechText}
                               onChange={(e) => {
-                                const techs = e.target.value.split(',').map((s) => s.trim()).filter(Boolean);
+                                const val = e.target.value;
+                                setRoleReqInputs((prev) => ({
+                                  ...prev,
+                                  [role]: {
+                                    techText: val,
+                                    preText: prev[role]?.preText !== undefined ? prev[role].preText : currentPreText,
+                                  },
+                                }));
+
+                                const techs = val.split(',').map((s) => s.trim()).filter(Boolean);
+                                const pres = currentPreText.split(',').map((s) => s.trim()).filter(Boolean);
+
                                 const updated = [...projectFormData.roleRequirements];
                                 const foundIdx = updated.findIndex((r) => r.role === role);
                                 if (foundIdx >= 0) {
-                                  updated[foundIdx] = { ...updated[foundIdx], technologies: techs };
+                                  updated[foundIdx] = { role, technologies: techs, prerequisites: pres };
                                 } else {
-                                  updated.push({ role, technologies: techs, prerequisites: existingReq.prerequisites });
+                                  updated.push({ role, technologies: techs, prerequisites: pres });
                                 }
                                 setProjectFormData({ ...projectFormData, roleRequirements: updated });
                               }}
-                              className="w-full py-1 px-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none"
+                              className="w-full py-1.5 px-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-600"
                             />
                           </div>
                           <div>
-                            <label className="text-[10px] text-slate-500 font-semibold block mb-0.5">
+                            <label className="text-[10.5px] text-slate-600 font-semibold block mb-1">
                               Bilinmesi / Hakim Olunması Gereken Konular (Virgülle ayırın)
                             </label>
                             <input
                               type="text"
                               placeholder="Örn: State Management, REST API Entegrasyonu, Responsive UI"
-                              value={existingReq.prerequisites.join(', ')}
+                              value={currentPreText}
                               onChange={(e) => {
-                                const pres = e.target.value.split(',').map((s) => s.trim()).filter(Boolean);
+                                const val = e.target.value;
+                                setRoleReqInputs((prev) => ({
+                                  ...prev,
+                                  [role]: {
+                                    techText: prev[role]?.techText !== undefined ? prev[role].techText : currentTechText,
+                                    preText: val,
+                                  },
+                                }));
+
+                                const pres = val.split(',').map((s) => s.trim()).filter(Boolean);
+                                const techs = currentTechText.split(',').map((s) => s.trim()).filter(Boolean);
+
                                 const updated = [...projectFormData.roleRequirements];
                                 const foundIdx = updated.findIndex((r) => r.role === role);
                                 if (foundIdx >= 0) {
-                                  updated[foundIdx] = { ...updated[foundIdx], prerequisites: pres };
+                                  updated[foundIdx] = { role, technologies: techs, prerequisites: pres };
                                 } else {
-                                  updated.push({ role, technologies: existingReq.technologies, prerequisites: pres });
+                                  updated.push({ role, technologies: techs, prerequisites: pres });
                                 }
                                 setProjectFormData({ ...projectFormData, roleRequirements: updated });
                               }}
-                              className="w-full py-1 px-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none"
+                              className="w-full py-1.5 px-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-600"
                             />
                           </div>
                         </div>

@@ -126,7 +126,9 @@ class ProjectController extends Controller
         $project = Project::with([
             'createdBy',
             'members.user:id,full_name,email,role,department,avatar',
-            'tasks.assignedUser:id,full_name,email',
+            'tasks' => function ($q) {
+                $q->withCount('comments')->with('assignedUser:id,full_name,email');
+            },
         ])->findOrFail($id);
 
         $myMembership = $project->members->firstWhere('user_id', $actor->id);
@@ -191,6 +193,7 @@ class ProjectController extends Controller
                     'estimatedHours' => (float) $t->estimated_hours,
                     'actualHours' => (float) $t->actual_hours,
                     'taskDate' => $t->task_date,
+                    'commentsCount' => (int) ($t->comments_count ?? 0),
                     'assignedUser' => $t->assignedUser ? [
                         'id' => (string) $t->assignedUser->id,
                         'fullName' => $t->assignedUser->full_name,
