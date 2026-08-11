@@ -21,7 +21,11 @@ class TaskController extends Controller
     {
         $user = $request->user();
 
-        $query = Task::with(['assignedUser', 'createdBy']);
+        $query = Task::with(['assignedUser', 'createdBy', 'project:id,name']);
+
+        if ($request->has('project_id') && !empty($request->project_id)) {
+            $query->where('project_id', $request->project_id);
+        }
 
         if ($user && $user->role !== 'ADMIN') {
             $query->where('assigned_user_id', $user->id);
@@ -35,6 +39,11 @@ class TaskController extends Controller
                 'status' => $t->status,
                 'priority' => $t->priority,
                 'category' => $t->category,
+                'projectId' => $t->project_id ? (string) $t->project_id : null,
+                'project' => $t->project ? [
+                    'id' => (string) $t->project->id,
+                    'name' => $t->project->name,
+                ] : null,
                 'assignedUserId' => (string) $t->assigned_user_id,
                 'createdById' => (string) $t->created_by_id,
                 'estimatedHours' => (float) $t->estimated_hours,
@@ -65,6 +74,7 @@ class TaskController extends Controller
             'status' => $request->status ?? 'TODO',
             'priority' => $request->priority ?? 'MEDIUM',
             'category' => $request->category ?? 'Geliştirme',
+            'project_id' => !empty($request->projectId) ? $request->projectId : (!empty($request->project_id) ? $request->project_id : null),
             'assigned_user_id' => $request->assignedUserId ?? ($actor ? $actor->id : 1),
             'created_by_id' => $actor ? $actor->id : null,
             'estimated_hours' => $request->estimatedHours ?? 4,
@@ -106,6 +116,7 @@ class TaskController extends Controller
             'status' => $request->status ?? $task->status,
             'priority' => $request->priority ?? $task->priority,
             'category' => $request->category ?? $task->category,
+            'project_id' => $request->has('projectId') ? ($request->projectId ?: null) : ($request->has('project_id') ? ($request->project_id ?: null) : $task->project_id),
             'assigned_user_id' => $request->assignedUserId ?? $task->assigned_user_id,
             'estimated_hours' => $request->estimatedHours ?? $task->estimated_hours,
             'actual_hours' => $request->actualHours ?? $task->actual_hours,

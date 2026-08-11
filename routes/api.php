@@ -8,6 +8,7 @@ use App\Http\Controllers\CvController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\OrientationController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\TelegramWebhookController;
 
@@ -51,6 +52,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orientations', [OrientationController::class, 'store']);
     Route::put('/orientations/{id}', [OrientationController::class, 'update']);
     Route::delete('/orientations/{id}', [OrientationController::class, 'destroy']);
+
+    Route::get('/projects', [ProjectController::class, 'index']);
+    Route::post('/projects', [ProjectController::class, 'store']);
+    Route::get('/projects/{id}', [ProjectController::class, 'show']);
+    Route::put('/projects/{id}', [ProjectController::class, 'update']);
+    Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
+    Route::post('/projects/{id}/apply', [ProjectController::class, 'apply']);
+    Route::post('/projects/{id}/members/{memberId}', [ProjectController::class, 'updateMemberStatus']);
 
     Route::get('/telegram/status', [TelegramController::class, 'getStatus']);
     Route::post('/telegram/set-webhook', [TelegramController::class, 'setWebhook']);
