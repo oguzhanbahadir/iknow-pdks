@@ -21,6 +21,8 @@ class Task extends Model
         'estimated_hours',
         'actual_hours',
         'task_date',
+        'start_date',
+        'due_date',
     ];
 
     public function project()
