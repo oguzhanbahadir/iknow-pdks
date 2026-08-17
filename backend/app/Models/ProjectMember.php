@@ -14,6 +14,12 @@ class ProjectMember extends Model
         'user_id',
         'requested_role',
         'status',
+        'is_moderator',
+        'member_role',
+    ];
+
+    protected $casts = [
+        'is_moderator' => 'boolean',
     ];
 
     public function project()

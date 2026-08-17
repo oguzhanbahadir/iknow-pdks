@@ -60,6 +60,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
     Route::post('/projects/{id}/apply', [ProjectController::class, 'apply']);
     Route::post('/projects/{id}/members/{memberId}', [ProjectController::class, 'updateMemberStatus']);
+    Route::post('/projects/{id}/members/{memberId}/role', [ProjectController::class, 'updateMemberRole']);
+    Route::get('/projects/{id}/logs', [ProjectController::class, 'getLogs']);
+    Route::get('/project-logs', [ProjectController::class, 'getAllLogs']);
+    Route::post('/projects/{id}/members/{memberId}/toggle-moderator', [ProjectController::class, 'toggleMemberModerator']);
 
     Route::get('/telegram/status', [TelegramController::class, 'getStatus']);
     Route::post('/telegram/set-webhook', [TelegramController::class, 'setWebhook']);

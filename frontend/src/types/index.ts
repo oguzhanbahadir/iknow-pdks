@@ -35,6 +35,9 @@ export interface TaskItem {
   estimatedHours: number;
   actualHours: number;
   taskDate?: string;
+  startDate?: string;
+  dueDate?: string;
+  createdAt?: string;
   commentsCount?: number;
   assignedUser?: {
     id: string;
@@ -48,6 +51,8 @@ export interface ProjectMember {
   userId: string;
   requestedRole: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  isModerator?: boolean;
+  memberRole?: 'MEMBER' | 'MODERATOR' | 'SPECTATOR';
   createdAt?: string;
   user?: {
     id: string;
@@ -90,6 +95,8 @@ export interface Project {
     id: string;
     requestedRole: string;
     status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    isModerator?: boolean;
+    memberRole?: 'MEMBER' | 'MODERATOR' | 'SPECTATOR';
   };
   members?: ProjectMember[];
   tasks?: TaskItem[];
@@ -131,4 +138,27 @@ export interface PersonelDetail extends User {
   scores?: InternScoreItem[];
   cvFiles?: CvItem[];
   tasksAssigned?: TaskItem[];
+}
+
+export interface ProjectLogItem {
+  id: string;
+  projectId?: string;
+  projectName?: string;
+  taskId?: string;
+  userId: string;
+  action: string;
+  title: string;
+  details?: Record<string, any>;
+  createdAt?: string;
+  user?: {
+    id: string;
+    fullName: string;
+    email: string;
+    role: string;
+    avatar?: string;
+  };
+  task?: {
+    id: string;
+    title: string;
+  };
 }

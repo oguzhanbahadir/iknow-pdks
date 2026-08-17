@@ -42,7 +42,7 @@ export default function ProjectsPage({ currentUser }: ProjectsPageProps) {
   const [projectFormData, setProjectFormData] = useState({
     name: '',
     description: '',
-    neededRoles: ['Frontend Geliştirici', 'Backend Geliştirici', 'DevOps'] as string[],
+    neededRoles: [] as string[],
     roleRequirements: [] as RoleRequirement[],
     documentation: '',
     repositoryUrl: '',
@@ -90,36 +90,17 @@ export default function ProjectsPage({ currentUser }: ProjectsPageProps) {
   };
 
   const openCreateProjectModal = () => {
-    const defaultRoles = ['Frontend Geliştirici', 'Backend Geliştirici', 'DevOps'];
-    const defaultReqs: RoleRequirement[] = [
-      {
-        role: 'Frontend Geliştirici',
-        technologies: ['React', 'TypeScript', 'Vite', 'TailwindCSS'],
-        prerequisites: ['State Management', 'REST API Entegrasyonu', 'Responsive UI'],
-      },
-      {
-        role: 'Backend Geliştirici',
-        technologies: ['PHP 8.2+', 'Laravel 11', 'MySQL'],
-        prerequisites: ['Eloquent ORM', 'Sanctum Auth', 'API Tasarımı'],
-      },
-      {
-        role: 'DevOps',
-        technologies: ['Docker', 'Nginx', 'GitHub Actions'],
-        prerequisites: ['CI/CD Pipeline', 'Sunucu Yönetimi'],
-      },
-    ];
-
     setEditingProject(null);
     setProjectFormData({
       name: '',
       description: '',
-      neededRoles: defaultRoles,
-      roleRequirements: defaultReqs,
+      neededRoles: [],
+      roleRequirements: [],
       documentation: '',
       repositoryUrl: '',
       status: 'PLANNING',
     });
-    initRoleReqInputs(defaultReqs);
+    initRoleReqInputs([]);
     setIsProjectModalOpen(true);
   };
 
@@ -129,7 +110,7 @@ export default function ProjectsPage({ currentUser }: ProjectsPageProps) {
     setProjectFormData({
       name: p.name,
       description: p.description || '',
-      neededRoles: p.neededRoles || ['Frontend Geliştirici', 'Backend Geliştirici'],
+      neededRoles: p.neededRoles || [],
       roleRequirements: reqs,
       documentation: p.documentation || '',
       repositoryUrl: p.repositoryUrl || '',
@@ -201,6 +182,7 @@ export default function ProjectsPage({ currentUser }: ProjectsPageProps) {
     setProjectFormData({
       ...projectFormData,
       neededRoles: projectFormData.neededRoles.filter((r) => r !== roleToRemove),
+      roleRequirements: projectFormData.roleRequirements.filter((r) => r.role !== roleToRemove),
     });
   };
 
