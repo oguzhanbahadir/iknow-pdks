@@ -10,8 +10,9 @@ import {
   Kanban,
   FileText,
   TrendingUp,
+  FolderKanban,
 } from 'lucide-react';
-import { User, TaskItem } from '../types';
+import { User, TaskItem, Project } from '../types';
 import { getAuthHeaders } from '../utils/api';
 
 interface DashboardPageProps {
@@ -21,14 +22,16 @@ interface DashboardPageProps {
 export default function DashboardPage({ currentUser }: DashboardPageProps) {
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [tasksRes, usersRes] = await Promise.all([
+        const [tasksRes, usersRes, projectsRes] = await Promise.all([
           fetch('/api/tasks', { headers: getAuthHeaders() }),
           fetch('/api/users', { headers: getAuthHeaders() }),
+          fetch('/api/projects', { headers: getAuthHeaders() }),
         ]);
 
         if (tasksRes.ok) {
@@ -39,6 +42,11 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
         if (usersRes.ok) {
           const uData = await usersRes.json();
           setUsers(uData.users || []);
+        }
+
+        if (projectsRes.ok) {
+          const pData = await projectsRes.json();
+          setProjects(pData.projects || []);
         }
       } catch (err) {
         console.error('Dashboard load error:', err);
@@ -90,8 +98,8 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
           </div>
           <p className="text-sm text-slate-500 mt-1">
             {isAdmin
-              ? 'Tüm personellerin efor durumunu, puanlamalarını ve görev akışını buradan yönetebilirsiniz.'
-              : 'Kendi günlük görevlerinizi Kanban panosunda yönetebilir ve efor saatlerinizi takip edebilirsiniz.'}
+              ? 'Tüm projelerin durumunu, personellerin görev akışını ve aktivitelerini buradan yönetebilirsiniz.'
+              : 'Kendi günlük görevlerinizi Kanban panosunda yönetebilir ve dahil olduğunuz projeleri takip edebilirsiniz.'}
           </p>
         </div>
 
@@ -130,26 +138,21 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
         <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Harcanan Efor (Saat)
+              {isAdmin ? 'Aktif Projeler' : 'Dahil Olduğum Projeler'}
             </span>
             <div className="w-9 h-9 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
-              <Clock className="w-5 h-5" />
+              <FolderKanban className="w-5 h-5" />
             </div>
           </div>
           <div className="flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-slate-900">{totalActualHours}h</span>
-            <span className="text-xs text-slate-500">/ {totalEstimatedHours}h planlanan</span>
+            <span className="text-3xl font-extrabold text-slate-900">
+              {isAdmin ? projects.length : projects.filter((p) => p.canAccessContent).length}
+            </span>
+            <span className="text-xs text-slate-500">adet proje</span>
           </div>
-          <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200">
-            <div
-              className="bg-emerald-600 h-full rounded-full"
-              style={{
-                width: `${totalEstimatedHours > 0
-                    ? Math.min(100, Math.round((totalActualHours / totalEstimatedHours) * 100))
-                    : 0
-                  }%`,
-              }}
-            />
+          <div className="flex items-center justify-between text-xs text-slate-500 border-t border-slate-100 pt-2">
+            <span>Devam Eden: {projects.filter((p) => p.status === 'IN_PROGRESS').length}</span>
+            <span>Planlanan: {projects.filter((p) => p.status === 'PLANNING').length}</span>
           </div>
         </div>
 

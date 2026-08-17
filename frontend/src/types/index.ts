@@ -37,6 +37,8 @@ export interface TaskItem {
   taskDate?: string;
   startDate?: string;
   dueDate?: string;
+  isArchived?: boolean;
+  archivedAt?: string;
   createdAt?: string;
   commentsCount?: number;
   assignedUser?: {

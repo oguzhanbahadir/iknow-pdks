@@ -18,6 +18,8 @@ import {
   FolderKanban,
   CheckCircle2,
   Sparkles,
+  Archive,
+  ArchiveRestore,
 } from 'lucide-react';
 import { User, TaskItem, TaskComment, Project } from '../types';
 import { getAuthHeaders } from '../utils/api';
@@ -55,6 +57,7 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
 
   // Filters & Views
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
+  const [showArchived, setShowArchived] = useState<boolean>(false);
   const [selectedUserFilter, setSelectedUserFilter] = useState<string>('ALL');
   const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -178,6 +181,41 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
       }
     } catch (err) {
       console.error('Delete task error:', err);
+    }
+  };
+
+  const handleArchiveTask = async (taskId: string) => {
+    if (!window.confirm('Bu görevi arşive taşımak istediğinize emin misiniz?')) return;
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/archive`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      });
+      if (res.ok) {
+        await fetchTasks();
+        if (detailTask && detailTask.id === taskId) {
+          setDetailTask((prev) => (prev ? { ...prev, isArchived: true } : null));
+        }
+      }
+    } catch (err) {
+      console.error('Archive task error:', err);
+    }
+  };
+
+  const handleUnarchiveTask = async (taskId: string) => {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/unarchive`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      });
+      if (res.ok) {
+        await fetchTasks();
+        if (detailTask && detailTask.id === taskId) {
+          setDetailTask((prev) => (prev ? { ...prev, isArchived: false } : null));
+        }
+      }
+    } catch (err) {
+      console.error('Unarchive task error:', err);
     }
   };
 
@@ -365,7 +403,11 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
       { key: 'DONE', label: 'Tamamlandı', bgColor: 'bg-emerald-50', textColor: 'text-emerald-900', borderColor: 'border-emerald-200' },
     ];
 
+  const archivedCount = tasks.filter((t) => Boolean(t.isArchived)).length;
+
   const filteredTasks = tasks.filter((t) => {
+    const matchesArchive = showArchived ? Boolean(t.isArchived) : !t.isArchived;
+
     const matchesSearch =
       t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (t.description && t.description.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -377,7 +419,7 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
       return false;
     }
 
-    return matchesSearch && matchesUser && matchesStatus;
+    return matchesArchive && matchesSearch && matchesUser && matchesStatus;
   });
 
   if (loading) {
@@ -486,6 +528,33 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
             <option value="IN_REVIEW">İncelemede</option>
             <option value="DONE">Tamamlandı</option>
           </select>
+
+          <button
+            onClick={() => setShowArchived(!showArchived)}
+            className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all ${
+              showArchived
+                ? 'bg-amber-600 text-white shadow-xs'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+            }`}
+            title={showArchived ? 'Aktif görevleri göster' : 'Arşivlenmiş görevleri listele'}
+          >
+            {showArchived ? (
+              <>
+                <FolderKanban className="w-3.5 h-3.5" />
+                <span>Aktif Görevler</span>
+              </>
+            ) : (
+              <>
+                <Archive className="w-3.5 h-3.5 text-amber-600" />
+                <span>Arşivdekileri Göster</span>
+                {archivedCount > 0 && (
+                  <span className="bg-amber-200 text-amber-900 text-[10px] px-1.5 py-0.2 rounded-full font-bold">
+                    {archivedCount}
+                  </span>
+                )}
+              </>
+            )}
+          </button>
         </div>
       </div>
 
@@ -554,14 +623,22 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                           }`}
                       >
                         <div className="flex items-center justify-between">
-                          {t.project ? (
-                            <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-indigo-100 inline-block">
-                              📁 {t.project.name}
-                            </span>
-                          ) : (
-                            <span className="text-[10.5px] font-semibold text-slate-400">#{t.id.slice(0, 6)}</span>
-                          )}
                           <div className="flex items-center space-x-1">
+                            {t.isArchived && (
+                              <span className="bg-amber-50 text-amber-800 border border-amber-200 text-[9.5px] font-bold px-1.5 py-0.5 rounded-md flex items-center space-x-1">
+                                <Archive className="w-2.5 h-2.5 text-amber-600" />
+                                <span>Arşivde</span>
+                              </span>
+                            )}
+                            {t.project ? (
+                              <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-indigo-100 inline-block">
+                                📁 {t.project.name}
+                              </span>
+                            ) : (
+                              <span className="text-[10.5px] font-semibold text-slate-400">#{t.id.slice(0, 6)}</span>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-0.5">
                             {t.commentsCount && t.commentsCount > 0 ? (
                               <button
                                 onClick={() => openDetailModal(t)}
@@ -586,6 +663,25 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
+                            {isAdmin && (
+                              t.isArchived ? (
+                                <button
+                                  onClick={() => handleUnarchiveTask(t.id)}
+                                  className="text-amber-600 hover:text-amber-800 p-1 transition-colors"
+                                  title="Arşivden Çıkar (Panoya Geri Yükle)"
+                                >
+                                  <ArchiveRestore className="w-3.5 h-3.5" />
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleArchiveTask(t.id)}
+                                  className="text-slate-400 hover:text-amber-600 p-1 transition-colors"
+                                  title="Görevi Arşive Taşı"
+                                >
+                                  <Archive className="w-3.5 h-3.5" />
+                                </button>
+                              )
+                            )}
                             <button
                               onClick={() => handleDeleteTask(t.id)}
                               className="text-slate-400 hover:text-red-600 p-1"
@@ -670,6 +766,12 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                     <tr key={t.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-3 px-4">
                         <div className="font-bold text-slate-900 text-sm flex items-center space-x-2 flex-wrap gap-y-1">
+                          {t.isArchived && (
+                            <span className="bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center space-x-1 shrink-0">
+                              <Archive className="w-3 h-3 text-amber-600" />
+                              <span>Arşivde</span>
+                            </span>
+                          )}
                           {t.project && (
                             <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-indigo-100 shrink-0">
                               📁 {t.project.name}
@@ -743,6 +845,27 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                           <Edit2 className="w-3.5 h-3.5" />
                           <span>Düzenle</span>
                         </button>
+                        {isAdmin && (
+                          t.isArchived ? (
+                            <button
+                              onClick={() => handleUnarchiveTask(t.id)}
+                              className="text-amber-600 hover:text-amber-800 font-semibold text-xs inline-flex items-center space-x-1"
+                              title="Arşivden Çıkar (Panoya Geri Yükle)"
+                            >
+                              <ArchiveRestore className="w-3.5 h-3.5" />
+                              <span>Geri Yükle</span>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleArchiveTask(t.id)}
+                              className="text-slate-500 hover:text-amber-600 font-semibold text-xs inline-flex items-center space-x-1"
+                              title="Görevi Arşive Taşı"
+                            >
+                              <Archive className="w-3.5 h-3.5" />
+                              <span>Arşivle</span>
+                            </button>
+                          )
+                        )}
                         <button
                           onClick={() => handleDeleteTask(t.id)}
                           className="text-slate-500 hover:text-red-600 font-semibold text-xs inline-flex items-center space-x-1"
@@ -1016,6 +1139,12 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                   <div>
                     <h3 className="font-bold text-slate-900 text-base">{detailTask.title}</h3>
                     <div className="flex items-center space-x-2 mt-1">
+                      {detailTask.isArchived && (
+                        <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center space-x-1">
+                          <Archive className="w-3 h-3 text-amber-600" />
+                          <span>Arşivde</span>
+                        </span>
+                      )}
                       <span
                         className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${detailTask.priority === 'HIGH'
                             ? 'bg-red-100 text-red-700'
@@ -1033,12 +1162,35 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => setDetailTask(null)}
-                  className="text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 p-1.5 rounded-xl transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center space-x-2">
+                  {isAdmin && (
+                    detailTask.isArchived ? (
+                      <button
+                        onClick={() => handleUnarchiveTask(detailTask.id)}
+                        className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold rounded-lg text-xs flex items-center space-x-1 transition-colors"
+                        title="Arşivden Çıkar"
+                      >
+                        <ArchiveRestore className="w-3.5 h-3.5 text-amber-700" />
+                        <span>Arşivden Çıkar</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleArchiveTask(detailTask.id)}
+                        className="px-2.5 py-1.5 bg-slate-100 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-200 border border-slate-200 text-slate-700 font-semibold rounded-lg text-xs flex items-center space-x-1 transition-colors"
+                        title="Arşive Taşı"
+                      >
+                        <Archive className="w-3.5 h-3.5" />
+                        <span>Arşive Taşı</span>
+                      </button>
+                    )
+                  )}
+                  <button
+                    onClick={() => setDetailTask(null)}
+                    className="text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 p-1.5 rounded-xl transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               {/* Drawer Scrollable Content */}

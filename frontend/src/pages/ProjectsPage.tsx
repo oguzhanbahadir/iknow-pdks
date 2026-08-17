@@ -305,8 +305,8 @@ export default function ProjectsPage({ currentUser }: ProjectsPageProps) {
       {/* Projects Full-Width List (100% Width) */}
       <div className="space-y-4 w-full">
         {filteredProjects.map((p) => {
-          const approvedMembers = p.members?.filter((m) => m.status === 'APPROVED') || [];
-          const pendingMembers = p.members?.filter((m) => m.status === 'PENDING') || [];
+          const approvedCount = p.approvedCount !== undefined ? p.approvedCount : (p.members?.filter((m) => m.status === 'APPROVED').length || 0);
+          const pendingCount = p.pendingCount !== undefined ? p.pendingCount : (p.members?.filter((m) => m.status === 'PENDING').length || 0);
           const myMemberStatus = p.myMembership?.status;
           const progressVal = p.progressPercentage || 0;
 
@@ -466,11 +466,11 @@ export default function ProjectsPage({ currentUser }: ProjectsPageProps) {
                 <div className="flex items-center justify-between lg:justify-end space-x-3 w-full">
                   <div className="flex items-center space-x-1.5 text-[11px] font-semibold text-slate-700 bg-slate-100/80 border border-slate-200/80 px-2.5 py-1 rounded-lg">
                     <Users className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>{approvedMembers.length} Üye</span>
+                    <span>{approvedCount} Üye</span>
                   </div>
-                  {isAdmin && pendingMembers.length > 0 && (
+                  {isAdmin && pendingCount > 0 && (
                     <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">
-                      {pendingMembers.length} Talep
+                      {pendingCount} Talep
                     </span>
                   )}
 

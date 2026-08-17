@@ -13,6 +13,8 @@ class Task extends Model
         'title',
         'description',
         'status',
+        'is_archived',
+        'archived_at',
         'priority',
         'category',
         'project_id',
@@ -23,6 +25,11 @@ class Task extends Model
         'task_date',
         'start_date',
         'due_date',
+    ];
+
+    protected $casts = [
+        'is_archived' => 'boolean',
+        'archived_at' => 'datetime',
     ];
 
     public function project()
@@ -45,4 +52,3 @@ class Task extends Model
         return $this->hasMany(TaskComment::class, 'task_id')->latest();
     }
 }
-

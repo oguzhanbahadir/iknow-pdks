@@ -38,6 +38,8 @@ class TaskController extends Controller
                 'title' => $t->title,
                 'description' => $t->description,
                 'status' => $t->status,
+                'isArchived' => (bool) $t->is_archived,
+                'archivedAt' => $t->archived_at ? $t->archived_at->toISOString() : null,
                 'priority' => $t->priority,
                 'category' => $t->category,
                 'projectId' => $t->project_id ? (string) $t->project_id : null,
@@ -406,5 +408,63 @@ class TaskController extends Controller
                 ] : null,
             ]
         ], 201);
+    }
+
+    public function archive(Request $request, $id)
+    {
+        $actor = $request->user();
+        if (!$actor || $actor->role !== 'ADMIN') {
+            return response()->json(['error' => 'Sadece Sistem Yöneticisi görevleri arşivleyebilir.'], 403);
+        }
+
+        $task = Task::findOrFail($id);
+        $task->update([
+            'is_archived' => true,
+            'archived_at' => now(),
+        ]);
+
+        ProjectLog::create([
+            'project_id' => $task->project_id,
+            'task_id' => $task->id,
+            'user_id' => $actor->id,
+            'action' => 'TASK_ARCHIVED',
+            'title' => "'{$task->title}' görevi arşive taşındı.",
+            'details' => [
+                'task_title' => $task->title,
+                'archived_by' => $actor->full_name,
+            ],
+            'ip_address' => $request->ip(),
+        ]);
+
+        return response()->json(['success' => true, 'task' => $task]);
+    }
+
+    public function unarchive(Request $request, $id)
+    {
+        $actor = $request->user();
+        if (!$actor || $actor->role !== 'ADMIN') {
+            return response()->json(['error' => 'Sadece Sistem Yöneticisi görevleri arşivden çıkarabilir.'], 403);
+        }
+
+        $task = Task::findOrFail($id);
+        $task->update([
+            'is_archived' => false,
+            'archived_at' => null,
+        ]);
+
+        ProjectLog::create([
+            'project_id' => $task->project_id,
+            'task_id' => $task->id,
+            'user_id' => $actor->id,
+            'action' => 'TASK_RESTORED',
+            'title' => "'{$task->title}' görevi arşivden çıkarıldı ve panoya geri yüklendi.",
+            'details' => [
+                'task_title' => $task->title,
+                'restored_by' => $actor->full_name,
+            ],
+            'ip_address' => $request->ip(),
+        ]);
+
+        return response()->json(['success' => true, 'task' => $task]);
     }
 }

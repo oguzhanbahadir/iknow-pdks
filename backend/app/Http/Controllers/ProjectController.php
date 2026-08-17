@@ -79,6 +79,25 @@ class ProjectController extends Controller
                     'isModerator' => (bool) $myMembership->is_moderator,
                     'memberRole' => $myMembership->member_role ?? ($myMembership->is_moderator ? 'MODERATOR' : 'MEMBER'),
                 ] : null,
+                'members' => $p->members->map(function ($m) {
+                    return [
+                        'id' => (string) $m->id,
+                        'userId' => (string) $m->user_id,
+                        'requestedRole' => $m->requested_role,
+                        'status' => $m->status,
+                        'isModerator' => (bool) $m->is_moderator,
+                        'memberRole' => $m->member_role ?? ($m->is_moderator ? 'MODERATOR' : 'MEMBER'),
+                        'createdAt' => $m->created_at ? $m->created_at->toISOString() : null,
+                        'user' => $m->user ? [
+                            'id' => (string) $m->user->id,
+                            'fullName' => $m->user->full_name,
+                            'email' => $m->user->email,
+                            'role' => $m->user->role,
+                            'department' => $m->user->department,
+                            'avatar' => $m->user->avatar,
+                        ] : null,
+                    ];
+                })->values(),
             ];
         });
 
@@ -230,6 +249,8 @@ class ProjectController extends Controller
                     'title' => $t->title,
                     'description' => $t->description,
                     'status' => $t->status,
+                    'isArchived' => (bool) $t->is_archived,
+                    'archivedAt' => $t->archived_at ? $t->archived_at->toISOString() : null,
                     'priority' => $t->priority,
                     'category' => $t->category,
                     'projectId' => (string) $t->project_id,
