@@ -183,3 +183,47 @@ export interface ProjectLogItem {
     title: string;
   };
 }
+
+export interface UserEmailAccount {
+  id: string;
+  emailAddress: string;
+  displayName?: string;
+  imapHost: string;
+  imapPort: number;
+  imapEncryption: string;
+  smtpHost: string;
+  smtpPort: number;
+  smtpEncryption: string;
+  username: string;
+  isActive: boolean;
+  lastSyncedAt?: string;
+}
+
+export interface EmailAttachment {
+  fileName: string;
+  size: number;
+  mimeType: string;
+}
+
+export interface EmailMessageHeader {
+  uid: string;
+  msgNo: number;
+  subject: string;
+  fromName: string;
+  fromEmail: string;
+  date: string;
+  isUnread: boolean;
+  size: number;
+}
+
+export interface EmailMessageDetail {
+  uid: string;
+  subject: string;
+  fromName: string;
+  fromEmail: string;
+  toEmail: string;
+  date: string;
+  htmlBody: string;
+  plainBody: string;
+  attachments?: EmailAttachment[];
+}

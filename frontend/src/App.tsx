@@ -15,6 +15,7 @@ import EffortPage from './pages/EffortPage';
 import OrientationPage from './pages/OrientationPage';
 import SettingsPage from './pages/SettingsPage';
 import ProfilePage from './pages/ProfilePage';
+import MailboxPage from './pages/MailboxPage';
 import { User } from './types';
 import { getAuthHeaders } from './utils/api';
 
@@ -100,6 +101,16 @@ export default function App() {
                 <Route path="/tasks" element={<TasksPage currentUser={currentUser} />} />
                 <Route path="/projects" element={<ProjectsPage currentUser={currentUser} />} />
                 <Route path="/projects/:id" element={<ProjectDetailPage currentUser={currentUser} />} />
+                <Route
+                  path="/mailbox"
+                  element={
+                    currentUser.role === 'ADMIN' ? (
+                      <MailboxPage currentUser={currentUser} />
+                    ) : (
+                      <Navigate to="/dashboard" replace />
+                    )
+                  }
+                />
                 <Route path="/team" element={<InternsPage currentUser={currentUser} />} />
                 <Route path="/team/:id" element={<InternDetailPage />} />
                 <Route path="/interns" element={<Navigate to="/team" replace />} />

@@ -11,6 +11,7 @@ use App\Http\Controllers\OrientationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\TelegramWebhookController;
+use App\Http\Controllers\MailController;
 
 // Public Auth & Webhook Routes
 Route::post('/auth/login', [AuthController::class, 'login']);
@@ -74,4 +75,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/telegram/test', [TelegramController::class, 'sendTestMessage']);
     Route::post('/telegram/send', [TelegramController::class, 'sendMessage']);
     Route::post('/telegram/poll-updates', [TelegramWebhookController::class, 'pollUpdates']);
+
+    // Mail & Webmail Routes
+    Route::get('/mail/account', [MailController::class, 'getAccount']);
+    Route::post('/mail/account', [MailController::class, 'saveAccount']);
+    Route::post('/mail/test', [MailController::class, 'testConnection']);
+    Route::get('/mail/inbox', [MailController::class, 'getInbox']);
+    Route::get('/mail/messages/{uid}', [MailController::class, 'getMessage']);
+    Route::post('/mail/send', [MailController::class, 'sendMail']);
+    Route::delete('/mail/messages/{uid}', [MailController::class, 'deleteMessage']);
+    Route::post('/mail/convert-to-task', [MailController::class, 'convertEmailToTask']);
 });

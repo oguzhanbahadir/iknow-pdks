@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   CheckSquare,
   FolderKanban,
+  Mail,
   Users,
   BarChart3,
   ShieldAlert,
@@ -41,6 +42,12 @@ export default function Sidebar({ role, isMobileOpen, onCloseMobile }: SidebarPr
       href: '/projects',
       icon: FolderKanban,
       roles: ['ADMIN', 'USER'],
+    },
+    {
+      name: 'E-Posta',
+      href: '/mailbox',
+      icon: Mail,
+      roles: ['ADMIN'],
     },
     {
       name: 'Oryantasyon',
@@ -100,11 +107,10 @@ export default function Sidebar({ role, isMobileOpen, onCloseMobile }: SidebarPr
                 key={item.name}
                 to={item.href}
                 onClick={() => onCloseMobile?.()}
-                className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-all ${
-                  isActive
+                className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-all ${isActive
                     ? 'bg-indigo-600 text-white shadow-xs font-semibold'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                }`}
+                  }`}
               >
                 <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-500'}`} />
                 <span>{item.name}</span>
