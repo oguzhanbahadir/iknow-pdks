@@ -256,6 +256,7 @@ class ProjectController extends Controller
                     'category' => $t->category,
                     'projectId' => (string) $t->project_id,
                     'assignedUserId' => (string) $t->assigned_user_id,
+                    'createdById' => $t->created_by_id ? (string) $t->created_by_id : null,
                     'estimatedHours' => (float) $t->estimated_hours,
                     'actualHours' => (float) $t->actual_hours,
                     'taskDate' => $t->task_date,

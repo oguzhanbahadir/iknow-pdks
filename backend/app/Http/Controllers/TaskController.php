@@ -296,11 +296,34 @@ class TaskController extends Controller
         $task = Task::findOrFail($id);
         $actor = $request->user();
 
-        if ($task->project_id && $actor && $actor->role !== 'ADMIN') {
-            $membership = \App\Models\ProjectMember::where('project_id', $task->project_id)->where('user_id', $actor->id)->first();
-            if ($membership && $membership->member_role === 'SPECTATOR') {
-                return response()->json(['error' => 'Gözlemci (Spectator) yetkisine sahip kullanıcılar proje görevlerini silemez.'], 403);
+        if (!$actor) {
+            return response()->json(['error' => 'Yetkisiz işlem.'], 401);
+        }
+
+        $isAdmin = $actor->role === 'ADMIN';
+        $isCreator = $task->created_by_id
+            ? ((string) $task->created_by_id === (string) $actor->id)
+            : ((string) $task->assigned_user_id === (string) $actor->id);
+
+        $isProjectModerator = false;
+        if ($task->project_id) {
+            $project = \App\Models\Project::find($task->project_id);
+            if ($project && (string) $project->created_by_id === (string) $actor->id) {
+                $isProjectModerator = true;
+            } else {
+                $membership = \App\Models\ProjectMember::where('project_id', $task->project_id)
+                    ->where('user_id', $actor->id)
+                    ->where('status', 'APPROVED')
+                    ->first();
+                if ($membership && ($membership->member_role === 'MODERATOR' || $membership->is_moderator)) {
+                    $isProjectModerator = true;
+                }
             }
+        }
+
+        // Authorization check: User can delete if they are Admin, Creator of the task, or Project Moderator
+        if (!$isAdmin && !$isCreator && !$isProjectModerator) {
+            return response()->json(['error' => 'Bu görevi silme yetkiniz bulunmuyor. Sadece kendi oluşturduğunuz görevleri veya moderatör/yönetici olduğunuz projelerdeki görevleri silebilirsiniz.'], 403);
         }
 
         $assignedUser = User::find($task->assigned_user_id);

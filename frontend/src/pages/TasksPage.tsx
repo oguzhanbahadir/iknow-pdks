@@ -859,13 +859,15 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                                 </button>
                               )
                             )}
-                            <button
-                              onClick={() => handleDeleteTask(t.id)}
-                              className="text-slate-400 hover:text-red-600 p-1"
-                              title="Sil"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            {(isAdmin || (t.createdById ? t.createdById === currentUser.id : t.assignedUserId === currentUser.id)) && (
+                              <button
+                                onClick={() => handleDeleteTask(t.id)}
+                                className="text-slate-400 hover:text-red-600 p-1"
+                                title="Sil"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         </div>
 
@@ -1052,14 +1054,16 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                             </button>
                           )
                         )}
-                        <button
-                          onClick={() => handleDeleteTask(t.id)}
-                          className="text-slate-500 hover:text-red-600 font-semibold text-xs inline-flex items-center space-x-1"
-                          title="Sil"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span>Sil</span>
-                        </button>
+                        {(isAdmin || (t.createdById ? t.createdById === currentUser.id : t.assignedUserId === currentUser.id)) && (
+                          <button
+                            onClick={() => handleDeleteTask(t.id)}
+                            className="text-slate-500 hover:text-red-600 font-semibold text-xs inline-flex items-center space-x-1"
+                            title="Sil"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Sil</span>
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -1601,6 +1605,21 @@ export default function TasksPage({ currentUser }: TasksPageProps) {
                         <span className="hidden sm:inline">Arşive Taşı</span>
                       </button>
                     ))}
+
+                  {(isAdmin || (detailTask.createdById ? detailTask.createdById === currentUser.id : detailTask.assignedUserId === currentUser.id)) && (
+                    <button
+                      onClick={() => {
+                        handleDeleteTask(detailTask.id);
+                        setDetailTask(null);
+                      }}
+                      className="px-2 sm:px-2.5 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-bold rounded-lg text-xs flex items-center space-x-1 transition-colors"
+                      title="Görevi Sil"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                      <span className="hidden sm:inline">Sil</span>
+                    </button>
+                  )}
+
                   <button
                     onClick={() => setDetailTask(null)}
                     className="text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 p-1.5 rounded-xl transition-colors"

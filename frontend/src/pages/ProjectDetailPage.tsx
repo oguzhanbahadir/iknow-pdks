@@ -1337,7 +1337,7 @@ export default function ProjectDetailPage({ currentUser }: ProjectDetailPageProp
                               const assignedUser = users.find((u) => u.id === t.assignedUserId);
                               const isDragging = draggedTaskId === t.id;
                               const canEditThis = !isSpectator && (isProjectModerator || isAdmin || t.assignedUserId === currentUser.id);
-                              const canDeleteThis = !isSpectator && (isProjectModerator || isAdmin || t.createdById === currentUser.id);
+                              const canDeleteThis = !isSpectator && (isAdmin || isProjectModerator || (t.createdById ? t.createdById === currentUser.id : t.assignedUserId === currentUser.id));
                               return (
                                 <div
                                   key={t.id}
@@ -1494,7 +1494,7 @@ export default function ProjectDetailPage({ currentUser }: ProjectDetailPageProp
                         {tasksList.map((t) => {
                           const assignedUser = users.find((u) => u.id === t.assignedUserId);
                           const canEditThis = !isSpectator && (isProjectModerator || isAdmin || t.assignedUserId === currentUser.id);
-                          const canDeleteThis = !isSpectator && (isProjectModerator || isAdmin || t.createdById === currentUser.id);
+                          const canDeleteThis = !isSpectator && (isAdmin || isProjectModerator || (t.createdById ? t.createdById === currentUser.id : t.assignedUserId === currentUser.id));
                           return (
                             <tr key={t.id} className="hover:bg-slate-50 transition-colors">
                               <td className="py-3 px-4">
@@ -2399,6 +2399,21 @@ export default function ProjectDetailPage({ currentUser }: ProjectDetailPageProp
                         <span className="hidden sm:inline">Arşive Taşı</span>
                       </button>
                     ))}
+
+                  {!isSpectator && (isAdmin || isProjectModerator || (detailTask.createdById ? detailTask.createdById === currentUser.id : detailTask.assignedUserId === currentUser.id)) && (
+                    <button
+                      onClick={() => {
+                        handleDeleteTask(detailTask.id);
+                        setDetailTask(null);
+                      }}
+                      className="px-2 sm:px-2.5 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-bold rounded-lg text-xs flex items-center space-x-1 transition-colors"
+                      title="Görevi Sil"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                      <span className="hidden sm:inline">Sil</span>
+                    </button>
+                  )}
+
                   <button
                     onClick={() => setDetailTask(null)}
                     className="text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 p-1.5 rounded-xl transition-colors"
