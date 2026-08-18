@@ -183,48 +183,54 @@ class MailController extends Controller
 
             if ($numMessages > 0) {
                 if (!empty($search)) {
-                    $uids = imap_search($imap, 'SUBJECT "' . addslashes($search) . '"', SE_UID);
+                    $uids = @imap_search($imap, 'SUBJECT "' . addslashes($search) . '"', SE_UID);
                     if (!$uids) {
-                        $uids = imap_search($imap, 'FROM "' . addslashes($search) . '"', SE_UID);
+                        $uids = @imap_search($imap, 'FROM "' . addslashes($search) . '"', SE_UID);
                     }
                     $uids = $uids ?: [];
                     rsort($uids);
                     $uids = array_slice($uids, 0, $limit);
+
+                    if (count($uids) > 0) {
+                        $sequence = implode(',', $uids);
+                        $overviewList = @imap_fetch_overview($imap, $sequence, FT_UID) ?: [];
+                    } else {
+                        $overviewList = [];
+                    }
                 } else {
                     // Get latest messages
                     $start = max(1, $numMessages - $limit + 1);
                     $sequence = "{$start}:{$numMessages}";
-                    $overviewList = imap_fetch_overview($imap, $sequence, 0);
+                    $overviewList = @imap_fetch_overview($imap, $sequence, 0) ?: [];
                     $overviewList = array_reverse($overviewList);
-
-                    $uids = array_map(function ($ov) {
-                        return $ov->uid;
-                    }, $overviewList);
                 }
 
-                foreach ($uids as $uid) {
-                    $msgNum = imap_msgno($imap, $uid);
-                    if (!$msgNum) continue;
+                foreach ($overviewList as $ov) {
+                    $uid = isset($ov->uid) && !empty($ov->uid) ? (string) $ov->uid : (isset($ov->msgno) ? (string) $ov->msgno : '');
+                    if (empty($uid)) continue;
 
-                    $header = imap_headerinfo($imap, $msgNum);
-                    if (!$header) continue;
-
-                    $subject = isset($header->subject) ? $this->decodeMimeString($header->subject) : '(Konusuz)';
-                    $fromName = isset($header->from[0]->personal) ? $this->decodeMimeString($header->from[0]->personal) : '';
-                    $fromEmail = isset($header->from[0]->mailbox, $header->from[0]->host) ? $header->from[0]->mailbox . '@' . $header->from[0]->host : '';
+                    $subject = (isset($ov->subject) && !empty($ov->subject)) ? $this->decodeMimeString($ov->subject) : '(Konusuz)';
                     
-                    $isUnread = ($header->Unseen == 'U' || $header->Recent == 'N');
-                    $dateStr = isset($header->udate) ? date('c', $header->udate) : (isset($header->date) ? date('c', strtotime($header->date)) : null);
+                    $rawFrom = isset($ov->from) ? $this->decodeMimeString($ov->from) : '';
+                    $fromName = $rawFrom;
+                    $fromEmail = $rawFrom;
+                    if (preg_match('/(.*?)<([^>]+)>/', $rawFrom, $matches)) {
+                        $fromName = trim($matches[1], " \t\n\r\0\x0B\"'");
+                        $fromEmail = trim($matches[2]);
+                    }
+
+                    $isUnread = empty($ov->seen) || $ov->seen == 0;
+                    $dateStr = isset($ov->date) ? date('c', strtotime($ov->date)) : null;
 
                     $messages[] = [
                         'uid' => (string) $uid,
-                        'msgNo' => $msgNum,
+                        'msgNo' => isset($ov->msgno) ? (int) $ov->msgno : 0,
                         'subject' => $subject,
                         'fromName' => $fromName ?: $fromEmail,
                         'fromEmail' => $fromEmail,
                         'date' => $dateStr,
                         'isUnread' => $isUnread,
-                        'size' => isset($header->Size) ? (int) $header->Size : 0,
+                        'size' => isset($ov->size) ? (int) $ov->size : 0,
                     ];
                 }
             }
@@ -265,30 +271,64 @@ class MailController extends Controller
                 $account->password
             );
 
-            $msgNum = imap_msgno($imap, (int) $uid);
-            if (!$msgNum) {
+            $uidInt = (int) $uid;
+            $msgNum = @imap_msgno($imap, $uidInt);
+
+            // Robust fallback if imap_msgno returned 0 or invalid
+            if (!$msgNum || $msgNum <= 0) {
+                $total = imap_num_msg($imap);
+                if ($uidInt > 0 && $uidInt <= $total) {
+                    $msgNum = $uidInt;
+                } else {
+                    $search = @imap_search($imap, "UID {$uidInt}", SE_UID);
+                    if ($search && count($search) > 0) {
+                        $msgNum = @imap_msgno($imap, $search[0]);
+                    }
+                }
+            }
+
+            if (!$msgNum || $msgNum <= 0) {
                 imap_close($imap);
                 return response()->json(['error' => 'E-posta mesajı bulunamadı.'], 404);
             }
 
-            $header = imap_headerinfo($imap, $msgNum);
-            $structure = imap_fetchstructure($imap, $msgNum);
+            $header = @imap_headerinfo($imap, $msgNum);
+            $structure = @imap_fetchstructure($imap, $msgNum);
 
-            $subject = isset($header->subject) ? $this->decodeMimeString($header->subject) : '(Konusuz)';
-            $fromName = isset($header->from[0]->personal) ? $this->decodeMimeString($header->from[0]->personal) : '';
-            $fromEmail = isset($header->from[0]->mailbox, $header->from[0]->host) ? $header->from[0]->mailbox . '@' . $header->from[0]->host : '';
-            $toEmail = isset($header->to[0]->mailbox, $header->to[0]->host) ? $header->to[0]->mailbox . '@' . $header->to[0]->host : '';
-            $dateStr = isset($header->udate) ? date('c', $header->udate) : (isset($header->date) ? date('c', strtotime($header->date)) : null);
+            $subject = (isset($header->subject) && !empty($header->subject)) ? $this->decodeMimeString($header->subject) : '(Konusuz)';
+            
+            $fromName = '';
+            $fromEmail = '';
+            if (isset($header->from[0])) {
+                $fromName = isset($header->from[0]->personal) ? $this->decodeMimeString($header->from[0]->personal) : '';
+                $fromEmail = isset($header->from[0]->mailbox, $header->from[0]->host) ? $header->from[0]->mailbox . '@' . $header->from[0]->host : '';
+            }
+            
+            $toEmail = '';
+            if (isset($header->to[0])) {
+                $toEmail = isset($header->to[0]->mailbox, $header->to[0]->host) ? $header->to[0]->mailbox . '@' . $header->to[0]->host : '';
+            }
+
+            $dateStr = isset($header->udate) && $header->udate > 0 ? date('c', $header->udate) : (isset($header->date) ? date('c', strtotime($header->date)) : null);
 
             // Fetch Body parts
             $bodyHtml = '';
             $bodyPlain = '';
             $attachments = [];
 
-            $this->parseStructure($imap, $msgNum, $structure, '', $bodyHtml, $bodyPlain, $attachments);
+            if ($structure) {
+                $this->parseStructure($imap, $msgNum, $structure, '', $bodyHtml, $bodyPlain, $attachments);
+            }
+
+            if (empty($bodyHtml) && empty($bodyPlain)) {
+                $raw = @imap_body($imap, $msgNum);
+                if ($raw) {
+                    $bodyPlain = quoted_printable_decode($raw);
+                }
+            }
 
             // Mark as read
-            imap_setflag_full($imap, (string) $uid, "\\Seen", ST_UID);
+            @imap_setflag_full($imap, (string) $msgNum, "\\Seen");
 
             imap_close($imap);
 
@@ -526,7 +566,16 @@ class MailController extends Controller
             }
         } else {
             $partNumber = $partPrefix ?: '1';
-            $data = imap_fetchbody($imap, $msgNum, $partNumber);
+            
+            if (empty($partPrefix)) {
+                $data = @imap_body($imap, $msgNum);
+            } else {
+                $data = @imap_fetchbody($imap, $msgNum, $partNumber);
+            }
+
+            if ($data === false || $data === null) {
+                $data = '';
+            }
 
             // Decode transfer encoding
             if (isset($structure->encoding)) {
@@ -535,6 +584,21 @@ class MailController extends Controller
                 } elseif ($structure->encoding === 4) {
                     $data = quoted_printable_decode($data);
                 }
+            }
+
+            // Detect and convert charset to UTF-8
+            $charset = '';
+            if (isset($structure->parameters)) {
+                foreach ($structure->parameters as $param) {
+                    if (strtolower($param->attribute) === 'charset') {
+                        $charset = strtolower($param->value);
+                    }
+                }
+            }
+            if ($charset && $charset !== 'utf-8' && function_exists('mb_convert_encoding')) {
+                try {
+                    $data = mb_convert_encoding($data, 'UTF-8', $charset);
+                } catch (\Exception $e) {}
             }
 
             // Check if attachment
@@ -565,7 +629,7 @@ class MailController extends Controller
                 $subtype = isset($structure->subtype) ? strtoupper($structure->subtype) : 'PLAIN';
                 if ($subtype === 'HTML' && empty($bodyHtml)) {
                     $bodyHtml = $data;
-                } elseif ($subtype === 'PLAIN' && empty($bodyPlain)) {
+                } elseif (($subtype === 'PLAIN' || empty($subtype)) && empty($bodyPlain)) {
                     $bodyPlain = $data;
                 }
             }
