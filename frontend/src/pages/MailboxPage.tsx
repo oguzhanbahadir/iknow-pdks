@@ -39,8 +39,12 @@ export default function MailboxPage({ currentUser }: MailboxPageProps) {
   const [selectedUid, setSelectedUid] = useState<string | null>(null);
   const [selectedMessage, setSelectedMessage] = useState<EmailMessageDetail | null>(null);
   const [loadingMessage, setLoadingMessage] = useState(false);
+  const [messageError, setMessageError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFolder, setActiveFolder] = useState<'INBOX' | 'UNREAD'>('INBOX');
+
+  // Abort controller for fast switching between messages
+  const messageAbortControllerRef = useRef<AbortController | null>(null);
 
   // Modals
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -164,8 +168,16 @@ export default function MailboxPage({ currentUser }: MailboxPageProps) {
   };
 
   const handleSelectMessage = async (uid: string) => {
+    // Abort previous in-flight request if any
+    if (messageAbortControllerRef.current) {
+      messageAbortControllerRef.current.abort();
+    }
+    const abortController = new AbortController();
+    messageAbortControllerRef.current = abortController;
+
     setSelectedUid(uid);
     setSelectedMessage(null);
+    setMessageError(null);
     setSelectedText('');
     setSelectionPosition(null);
 
@@ -178,15 +190,23 @@ export default function MailboxPage({ currentUser }: MailboxPageProps) {
       setLoadingMessage(true);
       const res = await fetch(`/api/mail/messages/${uid}`, {
         headers: getAuthHeaders(),
+        signal: abortController.signal,
       });
       const data = await res.json();
       if (data.message) {
         setSelectedMessage(data.message);
+      } else {
+        setMessageError(data.error || 'E-posta içeriği alınamadı.');
       }
-    } catch (err) {
-      console.error('Message fetch error:', err);
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.error('Message fetch error:', err);
+        setMessageError('E-posta yüklenirken bağlantı hatası oluştu.');
+      }
     } finally {
-      setLoadingMessage(false);
+      if (messageAbortControllerRef.current === abortController) {
+        setLoadingMessage(false);
+      }
     }
   };
 
@@ -640,6 +660,22 @@ export default function MailboxPage({ currentUser }: MailboxPageProps) {
             <div className="flex-1 flex flex-col items-center justify-center text-slate-400 text-xs space-y-2 p-8">
               <RefreshCw className="w-6 h-6 animate-spin text-indigo-600" />
               <span>E-posta içeriği alınıyor...</span>
+            </div>
+          ) : messageError ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-xs space-y-3 p-8 text-center">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <p className="font-semibold text-slate-700 max-w-xs">{messageError}</p>
+              {selectedUid && (
+                <button
+                  onClick={() => handleSelectMessage(selectedUid)}
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-colors shadow-xs inline-flex items-center space-x-1.5"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Tekrar Dene</span>
+                </button>
+              )}
             </div>
           ) : selectedMessage ? (
             <div className="flex-1 flex flex-col h-full overflow-hidden">
