@@ -515,6 +515,11 @@ class MailController extends Controller
 
     private function openImapConnection($host, $port, $encryption, $username, $password, $folder = 'INBOX')
     {
+        @imap_timeout(IMAP_OPENTIMEOUT, 8);
+        @imap_timeout(IMAP_READTIMEOUT, 8);
+        @imap_timeout(IMAP_WRITETIMEOUT, 8);
+        @imap_timeout(IMAP_CLOSETIMEOUT, 3);
+
         $flags = '/imap';
         if ($encryption === 'ssl' || $port == 993) {
             $flags .= '/ssl/novalidate-cert';
@@ -566,7 +571,37 @@ class MailController extends Controller
             }
         } else {
             $partNumber = $partPrefix ?: '1';
-            
+
+            // Check if attachment FIRST without downloading body bytes
+            $filename = '';
+            if (isset($structure->dparameters)) {
+                foreach ($structure->dparameters as $param) {
+                    if (strtolower($param->attribute) === 'filename') {
+                        $filename = $this->decodeMimeString($param->value);
+                    }
+                }
+            }
+            if (empty($filename) && isset($structure->parameters)) {
+                foreach ($structure->parameters as $param) {
+                    if (strtolower($param->attribute) === 'name') {
+                        $filename = $this->decodeMimeString($param->value);
+                    }
+                }
+            }
+
+            // If disposition is attachment or has filename, record attachment and SKIP fetching body bytes!
+            $isAttachment = !empty($filename) || (isset($structure->disposition) && strtolower($structure->disposition) === 'attachment');
+
+            if ($isAttachment) {
+                $attachments[] = [
+                    'fileName' => $filename ?: 'ek-dosya',
+                    'size' => isset($structure->bytes) ? (int) $structure->bytes : 0,
+                    'mimeType' => (isset($structure->subtype) ? strtolower($structure->subtype) : 'application/octet-stream'),
+                ];
+                return;
+            }
+
+            // Fetch text/html body only
             if (empty($partPrefix)) {
                 $data = @imap_body($imap, $msgNum);
             } else {
@@ -601,37 +636,12 @@ class MailController extends Controller
                 } catch (\Exception $e) {}
             }
 
-            // Check if attachment
-            $filename = '';
-            if (isset($structure->dparameters)) {
-                foreach ($structure->dparameters as $param) {
-                    if (strtolower($param->attribute) === 'filename') {
-                        $filename = $this->decodeMimeString($param->value);
-                    }
-                }
-            }
-            if (empty($filename) && isset($structure->parameters)) {
-                foreach ($structure->parameters as $param) {
-                    if (strtolower($param->attribute) === 'name') {
-                        $filename = $this->decodeMimeString($param->value);
-                    }
-                }
-            }
-
-            if (!empty($filename)) {
-                $attachments[] = [
-                    'fileName' => $filename,
-                    'size' => isset($structure->bytes) ? (int) $structure->bytes : strlen($data),
-                    'mimeType' => (isset($structure->subtype) ? strtolower($structure->subtype) : 'application/octet-stream'),
-                ];
-            } else {
-                // Text / HTML body
-                $subtype = isset($structure->subtype) ? strtoupper($structure->subtype) : 'PLAIN';
-                if ($subtype === 'HTML' && empty($bodyHtml)) {
-                    $bodyHtml = $data;
-                } elseif (($subtype === 'PLAIN' || empty($subtype)) && empty($bodyPlain)) {
-                    $bodyPlain = $data;
-                }
+            // Text / HTML body assignment
+            $subtype = isset($structure->subtype) ? strtoupper($structure->subtype) : 'PLAIN';
+            if ($subtype === 'HTML' && empty($bodyHtml)) {
+                $bodyHtml = $data;
+            } elseif (($subtype === 'PLAIN' || empty($subtype)) && empty($bodyPlain)) {
+                $bodyPlain = $data;
             }
         }
     }
