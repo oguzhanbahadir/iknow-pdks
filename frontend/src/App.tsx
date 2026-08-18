@@ -21,6 +21,7 @@ import { getAuthHeaders } from './utils/api';
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const checkAuth = async () => {
     try {
@@ -81,10 +82,19 @@ export default function App() {
     <BrowserRouter>
       {currentUser ? (
         <div className="min-h-screen bg-slate-100 flex flex-col font-sans relative">
-          <Header user={currentUser} onLogout={handleLogout} />
+          <Header
+            user={currentUser}
+            onLogout={handleLogout}
+            onToggleSidebar={() => setIsMobileSidebarOpen((prev) => !prev)}
+            isMobileSidebarOpen={isMobileSidebarOpen}
+          />
           <div className="flex flex-1">
-            <Sidebar role={currentUser.role} />
-            <main className="flex-1 p-6 max-w-7xl mx-auto w-full">
+            <Sidebar
+              role={currentUser.role}
+              isMobileOpen={isMobileSidebarOpen}
+              onCloseMobile={() => setIsMobileSidebarOpen(false)}
+            />
+            <main className="flex-1 p-3.5 sm:p-5 md:p-6 max-w-7xl mx-auto w-full min-w-0">
               <Routes>
                 <Route path="/dashboard" element={<DashboardPage currentUser={currentUser} />} />
                 <Route path="/tasks" element={<TasksPage currentUser={currentUser} />} />

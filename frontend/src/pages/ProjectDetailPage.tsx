@@ -118,6 +118,7 @@ export default function ProjectDetailPage({ currentUser }: ProjectDetailPageProp
 
   // Task Detail Chat Modal State
   const [detailTask, setDetailTask] = useState<TaskItem | null>(null);
+  const [activeDetailTab, setActiveDetailTab] = useState<'details' | 'comments'>('details');
   const [comments, setComments] = useState<TaskComment[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [newCommentText, setNewCommentText] = useState('');
@@ -870,7 +871,7 @@ export default function ProjectDetailPage({ currentUser }: ProjectDetailPageProp
 
       {/* Tabs Layout */}
       <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-        <div className="flex border-b border-slate-200 bg-slate-50/70 px-6 pt-3 space-x-6">
+        <div className="flex border-b border-slate-200 bg-slate-50/70 px-4 sm:px-6 pt-3 space-x-4 sm:space-x-6 overflow-x-auto whitespace-nowrap">
           <button
             onClick={() => setActiveTab('docs')}
             className={`pb-3 text-xs font-bold border-b-2 transition-all flex items-center space-x-2 ${activeTab === 'docs'
@@ -1879,10 +1880,10 @@ export default function ProjectDetailPage({ currentUser }: ProjectDetailPageProp
             onClick={() => setIsTaskModalOpen(false)}
           />
 
-          <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-            <div className="w-screen max-w-lg md:max-w-xl bg-white shadow-2xl border-l border-slate-200 flex flex-col h-full animate-in slide-in-from-right duration-200 text-xs text-slate-700">
+          <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
+            <div className="w-screen max-w-full sm:max-w-lg md:max-w-xl bg-white shadow-2xl border-l border-slate-200 flex flex-col h-full animate-in slide-in-from-right duration-200 text-xs text-slate-700">
               {/* Drawer Header */}
-              <div className="p-5 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between shrink-0">
+              <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between shrink-0">
                 <div className="flex items-center space-x-3">
                   <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl">
                     <FolderKanban className="w-5 h-5" />
@@ -2241,8 +2242,8 @@ export default function ProjectDetailPage({ currentUser }: ProjectDetailPageProp
           />
 
           <div className="fixed inset-y-0 right-0 max-w-full flex shadow-2xl">
-            {/* LEFT PANEL: Görev Yazışmaları & Notlar (Dedicated Column to the Left of Main Sidebar) */}
-            <div className="w-[320px] sm:w-[350px] md:w-[380px] bg-slate-50/90 border-l border-r border-slate-200 flex flex-col h-full animate-in slide-in-from-right duration-200 text-xs text-slate-700">
+            {/* DESKTOP ONLY LEFT PANEL: Görev Yazışmaları & Notlar */}
+            <div className="w-[320px] sm:w-[350px] md:w-[380px] bg-slate-50/90 border-l border-r border-slate-200 hidden lg:flex flex-col h-full animate-in slide-in-from-right duration-200 text-xs text-slate-700">
               {/* Header */}
               <div className="p-4 border-b border-slate-200 bg-white flex items-center justify-between shrink-0">
                 <div className="flex items-center space-x-2">
@@ -2342,25 +2343,25 @@ export default function ProjectDetailPage({ currentUser }: ProjectDetailPageProp
               </form>
             </div>
 
-            {/* RIGHT PANEL: Main Task Details Drawer */}
-            <div className="w-screen max-w-lg md:max-w-xl bg-white flex flex-col h-full animate-in slide-in-from-right duration-200 text-xs text-slate-700">
+            {/* MAIN PANEL: Task Details & Mobile Tabs */}
+            <div className="w-screen max-w-full sm:max-w-lg md:max-w-xl bg-white flex flex-col h-full animate-in slide-in-from-right duration-200 text-xs text-slate-700">
               {/* Drawer Header */}
-              <div className="p-5 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between shrink-0">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl">
-                    <Eye className="w-5 h-5" />
+              <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between shrink-0">
+                <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0 flex-1">
+                  <div className="p-2 sm:p-2.5 bg-indigo-50 text-indigo-600 rounded-xl shrink-0">
+                    <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-base">{detailTask.title}</h3>
-                    <div className="flex items-center space-x-2 mt-1">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-bold text-slate-900 text-sm sm:text-base truncate">{detailTask.title}</h3>
+                    <div className="flex items-center space-x-1.5 sm:space-x-2 mt-0.5 flex-wrap gap-y-1">
                       {detailTask.isArchived && (
-                        <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center space-x-1">
-                          <Archive className="w-3 h-3 text-amber-600" />
+                        <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center space-x-1 shrink-0">
+                          <Archive className="w-2.5 h-2.5 text-amber-600" />
                           <span>Arşivde</span>
                         </span>
                       )}
                       <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        className={`text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full shrink-0 ${
                           detailTask.priority === 'HIGH'
                             ? 'bg-red-100 text-red-700'
                             : detailTask.priority === 'MEDIUM'
@@ -2370,32 +2371,32 @@ export default function ProjectDetailPage({ currentUser }: ProjectDetailPageProp
                       >
                         {detailTask.priority}
                       </span>
-                      <span className="text-slate-300">•</span>
-                      <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
+                      <span className="text-slate-300 hidden sm:inline">•</span>
+                      <span className="text-[10px] sm:text-xs font-semibold text-indigo-600 bg-indigo-50 px-1.5 sm:px-2 py-0.5 rounded-md shrink-0">
                         {statusColumns.find((s) => s.key === detailTask.status)?.label || detailTask.status}
                       </span>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0 ml-2">
                   {(isAdmin || isProjectModerator) &&
                     (detailTask.isArchived ? (
                       <button
                         onClick={() => handleUnarchiveTask(detailTask.id)}
-                        className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold rounded-lg text-xs flex items-center space-x-1 transition-colors"
+                        className="px-2 sm:px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold rounded-lg text-xs flex items-center space-x-1 transition-colors"
                         title="Arşivden Çıkar"
                       >
                         <ArchiveRestore className="w-3.5 h-3.5 text-amber-700" />
-                        <span>Arşivden Çıkar</span>
+                        <span className="hidden sm:inline">Arşivden Çıkar</span>
                       </button>
                     ) : (
                       <button
                         onClick={() => handleArchiveTask(detailTask.id)}
-                        className="px-2.5 py-1.5 bg-slate-100 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-200 border border-slate-200 text-slate-700 font-semibold rounded-lg text-xs flex items-center space-x-1 transition-colors"
+                        className="px-2 sm:px-2.5 py-1.5 bg-slate-100 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-200 border border-slate-200 text-slate-700 font-semibold rounded-lg text-xs flex items-center space-x-1 transition-colors"
                         title="Arşive Taşı"
                       >
                         <Archive className="w-3.5 h-3.5" />
-                        <span>Arşive Taşı</span>
+                        <span className="hidden sm:inline">Arşive Taşı</span>
                       </button>
                     ))}
                   <button
@@ -2407,203 +2408,304 @@ export default function ProjectDetailPage({ currentUser }: ProjectDetailPageProp
                 </div>
               </div>
 
-              {/* Drawer Scrollable Content */}
-              <div className="p-6 space-y-6 overflow-y-auto flex-1">
-                {/* Task Details Overview Grid */}
-                <div className="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-200 rounded-xl p-4">
-                  <div>
-                    <div className="text-slate-400 font-semibold text-[10px] flex items-center space-x-1 mb-1">
-                      <UserIcon className="w-3 h-3" />
-                      <span>Atanan Kişi</span>
-                    </div>
-                    <div className="font-bold text-slate-800 text-xs">
-                      {users.find((u) => u.id === detailTask.assignedUserId)?.fullName || 'Atanmamış'}
-                    </div>
+              {/* MOBILE ONLY TAB SWITCHER */}
+              <div className="flex lg:hidden border-b border-slate-200 bg-slate-100/70 p-1 shrink-0">
+                <button
+                  onClick={() => setActiveDetailTab('details')}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg flex items-center justify-center space-x-1.5 transition-all ${
+                    activeDetailTab === 'details'
+                      ? 'bg-white text-indigo-700 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Görev Detayları</span>
+                </button>
+                <button
+                  onClick={() => setActiveDetailTab('comments')}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg flex items-center justify-center space-x-1.5 transition-all ${
+                    activeDetailTab === 'comments'
+                      ? 'bg-white text-indigo-700 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Yazışmalar ({comments.length})</span>
+                </button>
+              </div>
+
+              {/* MOBILE COMMENTS VIEW */}
+              {activeDetailTab === 'comments' ? (
+                <div className="flex-1 flex flex-col min-h-0 lg:hidden">
+                  <div className="p-4 space-y-3 overflow-y-auto flex-1 bg-slate-50/50">
+                    {loadingComments ? (
+                      <div className="py-12 text-center text-slate-400 font-medium flex items-center justify-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                        <span>Yazışmalar yükleniyor...</span>
+                      </div>
+                    ) : comments.length > 0 ? (
+                      comments.map((c) => {
+                        const isMe = c.userId === currentUser.id;
+                        return (
+                          <div
+                            key={c.id}
+                            className={`flex space-x-2.5 ${isMe ? 'flex-row-reverse space-x-reverse' : ''}`}
+                          >
+                            <div className="w-7 h-7 rounded-full bg-indigo-600 text-white font-bold text-[11px] flex items-center justify-center shrink-0 shadow-xs">
+                              {c.user?.fullName ? c.user.fullName.charAt(0).toUpperCase() : 'U'}
+                            </div>
+                            <div
+                              className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 shadow-2xs ${
+                                isMe
+                                  ? 'bg-indigo-600 text-white rounded-tr-none'
+                                  : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between space-x-2 mb-1">
+                                <span
+                                  className={`font-bold text-[11px] truncate ${isMe ? 'text-indigo-100' : 'text-slate-900'}`}
+                                >
+                                  {c.user?.fullName || 'Kullanıcı'}
+                                </span>
+                                <span
+                                  className={`text-[9px] shrink-0 ${isMe ? 'text-indigo-200' : 'text-slate-400'}`}
+                                >
+                                  {c.createdAt
+                                    ? new Date(c.createdAt).toLocaleTimeString('tr-TR', {
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                      })
+                                    : ''}
+                                </span>
+                              </div>
+                              <p className="leading-normal whitespace-pre-wrap text-[11.5px]">{c.message}</p>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="py-12 text-center text-slate-400 text-xs italic">
+                        Henüz bu görev hakkında bir yazışma yapılmamış.
+                      </div>
+                    )}
                   </div>
 
-                  <div>
-                    <div className="text-slate-400 font-semibold text-[10px] flex items-center space-x-1 mb-1">
-                      <Tag className="w-3 h-3" />
-                      <span>Bağlı Proje</span>
-                    </div>
-                    <div className="font-semibold text-indigo-700 text-xs">{project?.name || ''}</div>
-                  </div>
-
-                  <div>
-                    <div className="text-slate-400 font-semibold text-[10px] flex items-center space-x-1 mb-1">
-                      <Tag className="w-3 h-3" />
-                      <span>Kategori</span>
-                    </div>
-                    <div>{getCategoryBadge(detailTask.category)}</div>
-                  </div>
-
-                  <div className="col-span-2 bg-white rounded-xl p-3 border border-slate-200">
-                    <TaskTimeTracker task={detailTask} />
-                  </div>
+                  <form
+                    onSubmit={handleSendComment}
+                    className="p-3 border-t border-slate-200 bg-white shrink-0 flex items-center space-x-2"
+                  >
+                    <input
+                      type="text"
+                      placeholder="Mesaj veya not yazın..."
+                      value={newCommentText}
+                      onChange={(e) => setNewCommentText(e.target.value)}
+                      className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-600 transition-colors shadow-2xs"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!newCommentText.trim() || sendingComment}
+                      className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold p-2.5 rounded-xl flex items-center justify-center transition-colors shadow-xs shrink-0"
+                      title="Gönder"
+                    >
+                      {sendingComment ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Send className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </form>
                 </div>
-
-                {/* Task Description */}
-                <div>
-                  <h4 className="font-bold text-slate-800 text-xs mb-1.5">Açıklama & Detaylar</h4>
-                  <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-4 text-slate-700 text-xs min-h-[80px]">
-                    <RichTextRenderer content={detailTask.description} />
-                  </div>
-                </div>
-
-                {/* Task Attachments (Images & Documents) Section */}
-                {detailTask.attachments && detailTask.attachments.length > 0 && (
-                  <div className="space-y-3.5 pt-3 border-t border-slate-100">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Paperclip className="w-4 h-4 text-teal-600" />
-                        <h4 className="font-bold text-slate-900 text-sm">Ekler ve Belgeler</h4>
-                        <span className="bg-teal-100 text-teal-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                          {detailTask.attachments.length}
-                        </span>
+              ) : (
+                /* MAIN DETAILS SCROLLABLE BODY */
+                <div className="p-4 sm:p-6 space-y-5 sm:space-y-6 overflow-y-auto flex-1 text-xs text-slate-700">
+                  {/* Task Details Overview Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 border border-slate-200 rounded-xl p-4">
+                    <div>
+                      <div className="text-slate-400 font-semibold text-[10px] flex items-center space-x-1 mb-1">
+                        <UserIcon className="w-3 h-3" />
+                        <span>Atanan Kişi</span>
+                      </div>
+                      <div className="font-bold text-slate-800 text-xs">
+                        {users.find((u) => u.id === detailTask.assignedUserId)?.fullName || 'Atanmamış'}
                       </div>
                     </div>
 
-                    <div className="space-y-3">
-                      {/* Image attachments gallery */}
-                      {detailTask.attachments.filter((a) => a.fileType === 'image').length > 0 && (
-                        <div>
-                          <div className="text-[11px] font-bold text-slate-600 mb-1.5 flex items-center space-x-1">
-                            <ImageIcon className="w-3.5 h-3.5 text-indigo-600" />
-                            <span>Görseller ({detailTask.attachments.filter((a) => a.fileType === 'image').length})</span>
-                          </div>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                            {detailTask.attachments
-                              .filter((a) => a.fileType === 'image')
-                              .map((att) => (
-                                <div
-                                  key={att.id}
-                                  className="group relative bg-white border border-slate-200 hover:border-indigo-300 rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col cursor-pointer"
-                                  onClick={() => setPreviewImage({ url: att.fileUrl, name: att.fileName })}
-                                  title="Büyütmek için tıklayın"
-                                >
-                                  <div className="relative aspect-4/3 bg-slate-100 overflow-hidden">
-                                    <img
-                                      src={att.fileUrl}
-                                      alt={att.fileName}
-                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                                      loading="lazy"
-                                    />
-                                    <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/30 transition-colors flex items-center justify-center">
-                                      <Maximize2 className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md" />
-                                    </div>
-                                    <span className="absolute top-1.5 right-1.5 bg-slate-900/70 text-white font-semibold text-[9px] px-1.5 py-0.5 rounded-md shadow-xs">
-                                      {formatFileSize(att.fileSize)}
-                                    </span>
-                                  </div>
-                                  <div className="p-2 flex items-center justify-between bg-white" onClick={(e) => e.stopPropagation()}>
-                                    <span
-                                      className="font-medium text-slate-800 text-[10.5px] truncate flex-1 pr-1 cursor-pointer hover:text-indigo-600"
-                                      title={att.fileName}
-                                      onClick={() => setPreviewImage({ url: att.fileUrl, name: att.fileName })}
-                                    >
-                                      {att.fileName}
-                                    </span>
-                                    <div className="flex items-center space-x-1 shrink-0">
-                                      <a
-                                        href={att.fileUrl}
-                                        download={att.fileName}
-                                        className="p-1 text-slate-400 hover:text-indigo-600 transition-colors"
-                                        title="İndir"
-                                      >
-                                        <Download className="w-3.5 h-3.5" />
-                                      </a>
-                                      {(isAdmin || isProjectModerator || att.userId === currentUser.id) && (
-                                        <button
-                                          onClick={() => handleDeleteAttachment(att.id)}
-                                          className="p-1 text-slate-400 hover:text-red-600 transition-colors"
-                                          title="Sil"
-                                        >
-                                          <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                          </div>
-                        </div>
-                      )}
+                    <div>
+                      <div className="text-slate-400 font-semibold text-[10px] flex items-center space-x-1 mb-1">
+                        <Tag className="w-3 h-3" />
+                        <span>Kategori</span>
+                      </div>
+                      <div>{getCategoryBadge(detailTask.category)}</div>
+                    </div>
 
-                      {/* Document attachments list */}
-                      {detailTask.attachments.filter((a) => a.fileType === 'document').length > 0 && (
-                        <div>
-                          <div className="text-[11px] font-bold text-slate-600 mb-1.5 flex items-center space-x-1">
-                            <FileText className="w-3.5 h-3.5 text-indigo-600" />
-                            <span>Belgeler ({detailTask.attachments.filter((a) => a.fileType === 'document').length})</span>
-                          </div>
-                          <div className="space-y-1.5">
-                            {detailTask.attachments
-                              .filter((a) => a.fileType === 'document')
-                              .map((att) => {
-                                const ext = att.fileName.split('.').pop()?.toLowerCase() || '';
-                                let icon = <FileGenericIcon className="w-4 h-4 text-slate-600" />;
-                                if (ext === 'pdf') icon = <FileText className="w-4 h-4 text-red-600" />;
-                                else if (['doc', 'docx'].includes(ext)) icon = <FileText className="w-4 h-4 text-blue-600" />;
-                                else if (['xls', 'xlsx', 'csv'].includes(ext)) icon = <FileSpreadsheet className="w-4 h-4 text-emerald-600" />;
-                                else if (['zip', 'rar'].includes(ext)) icon = <FileArchive className="w-4 h-4 text-amber-600" />;
-
-                                return (
-                                  <div
-                                    key={att.id}
-                                    className="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-xs transition-all shadow-2xs group cursor-pointer"
-                                    onClick={() => window.open(att.fileUrl, '_blank')}
-                                    title="Açmak için tıklayın"
-                                  >
-                                    <div className="flex items-center space-x-2.5 min-w-0 flex-1">
-                                      <div className="p-1.5 bg-slate-100 group-hover:bg-indigo-50 rounded-lg shrink-0 transition-colors">
-                                        {icon}
-                                      </div>
-                                      <div className="min-w-0 flex-1">
-                                        <div className="font-semibold text-slate-900 text-xs truncate group-hover:text-indigo-600 transition-colors" title={att.fileName}>
-                                          {att.fileName}
-                                        </div>
-                                        <div className="text-[10px] text-slate-400 flex items-center space-x-2 mt-0.5">
-                                          <span className="font-bold text-slate-600 bg-slate-100 px-1.5 py-0.2 rounded">
-                                            {formatFileSize(att.fileSize)}
-                                          </span>
-                                          {att.user && <span>• {att.user.fullName}</span>}
-                                          {att.createdAt && (
-                                            <span>• {new Date(att.createdAt).toLocaleDateString('tr-TR')}</span>
-                                          )}
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center space-x-1 shrink-0 ml-2" onClick={(e) => e.stopPropagation()}>
-                                      <a
-                                        href={att.fileUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="px-2 py-1 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 font-semibold rounded-lg text-[11px] flex items-center space-x-1 transition-colors"
-                                        title="Görüntüle / İndir"
-                                      >
-                                        <Download className="w-3 h-3" />
-                                        <span>Aç / İndir</span>
-                                      </a>
-                                      {(isAdmin || isProjectModerator || att.userId === currentUser.id) && (
-                                        <button
-                                          onClick={() => handleDeleteAttachment(att.id)}
-                                          className="p-1 text-slate-400 hover:text-red-600 transition-colors"
-                                          title="Sil"
-                                        >
-                                          <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                          </div>
-                        </div>
-                      )}
+                    <div className="col-span-1 sm:col-span-2 bg-white rounded-xl p-3 border border-slate-200">
+                      <TaskTimeTracker task={detailTask} />
                     </div>
                   </div>
-                )}
-              </div>
+
+                  {/* Task Description */}
+                  <div>
+                    <h4 className="font-bold text-slate-800 text-xs mb-1.5">Açıklama & Detaylar</h4>
+                    <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-4 text-slate-700 text-xs min-h-[80px]">
+                      <RichTextRenderer content={detailTask.description} />
+                    </div>
+                  </div>
+
+                  {/* Task Attachments (Images & Documents) Section */}
+                  {detailTask.attachments && detailTask.attachments.length > 0 && (
+                    <div className="space-y-3.5 pt-3 border-t border-slate-100">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Paperclip className="w-4 h-4 text-teal-600" />
+                          <h4 className="font-bold text-slate-900 text-sm">Ekler ve Belgeler</h4>
+                          <span className="bg-teal-100 text-teal-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            {detailTask.attachments.length}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        {/* Image attachments gallery */}
+                        {detailTask.attachments.filter((a) => a.fileType === 'image').length > 0 && (
+                          <div>
+                            <div className="text-[11px] font-bold text-slate-600 mb-1.5 flex items-center space-x-1">
+                              <ImageIcon className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>Görseller ({detailTask.attachments.filter((a) => a.fileType === 'image').length})</span>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                              {detailTask.attachments
+                                .filter((a) => a.fileType === 'image')
+                                .map((att) => (
+                                  <div
+                                    key={att.id}
+                                    className="group relative bg-white border border-slate-200 hover:border-indigo-300 rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col cursor-pointer"
+                                    onClick={() => setPreviewImage({ url: att.fileUrl, name: att.fileName })}
+                                    title="Büyütmek için tıklayın"
+                                  >
+                                    <div className="relative aspect-4/3 bg-slate-100 overflow-hidden">
+                                      <img
+                                        src={att.fileUrl}
+                                        alt={att.fileName}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                        loading="lazy"
+                                      />
+                                      <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/30 transition-colors flex items-center justify-center">
+                                        <Maximize2 className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md" />
+                                      </div>
+                                      <span className="absolute top-1.5 right-1.5 bg-slate-900/70 text-white font-semibold text-[9px] px-1.5 py-0.5 rounded-md shadow-xs">
+                                        {formatFileSize(att.fileSize)}
+                                      </span>
+                                    </div>
+                                    <div className="p-2 flex items-center justify-between bg-white" onClick={(e) => e.stopPropagation()}>
+                                      <span
+                                        className="font-medium text-slate-800 text-[10.5px] truncate flex-1 pr-1 cursor-pointer hover:text-indigo-600"
+                                        title={att.fileName}
+                                        onClick={() => setPreviewImage({ url: att.fileUrl, name: att.fileName })}
+                                      >
+                                        {att.fileName}
+                                      </span>
+                                      <div className="flex items-center space-x-1 shrink-0">
+                                        <a
+                                          href={att.fileUrl}
+                                          download={att.fileName}
+                                          className="p-1 text-slate-400 hover:text-indigo-600 transition-colors"
+                                          title="İndir"
+                                        >
+                                          <Download className="w-3.5 h-3.5" />
+                                        </a>
+                                        {(isAdmin || isProjectModerator || att.userId === currentUser.id) && (
+                                          <button
+                                            onClick={() => handleDeleteAttachment(att.id)}
+                                            className="p-1 text-slate-400 hover:text-red-600 transition-colors"
+                                            title="Sil"
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Document attachments list */}
+                        {detailTask.attachments.filter((a) => a.fileType === 'document').length > 0 && (
+                          <div>
+                            <div className="text-[11px] font-bold text-slate-600 mb-1.5 flex items-center space-x-1">
+                              <FileText className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>Belgeler ({detailTask.attachments.filter((a) => a.fileType === 'document').length})</span>
+                            </div>
+                            <div className="space-y-1.5">
+                              {detailTask.attachments
+                                .filter((a) => a.fileType === 'document')
+                                .map((att) => {
+                                  const ext = att.fileName.split('.').pop()?.toLowerCase() || '';
+                                  let icon = <FileGenericIcon className="w-4 h-4 text-slate-600" />;
+                                  if (ext === 'pdf') icon = <FileText className="w-4 h-4 text-red-600" />;
+                                  else if (['doc', 'docx'].includes(ext)) icon = <FileText className="w-4 h-4 text-blue-600" />;
+                                  else if (['xls', 'xlsx', 'csv'].includes(ext)) icon = <FileSpreadsheet className="w-4 h-4 text-emerald-600" />;
+                                  else if (['zip', 'rar'].includes(ext)) icon = <FileArchive className="w-4 h-4 text-amber-600" />;
+
+                                  return (
+                                    <div
+                                      key={att.id}
+                                      className="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-xs transition-all shadow-2xs group cursor-pointer"
+                                      onClick={() => window.open(att.fileUrl, '_blank')}
+                                      title="Açmak için tıklayın"
+                                    >
+                                      <div className="flex items-center space-x-2.5 min-w-0 flex-1">
+                                        <div className="p-1.5 bg-slate-100 group-hover:bg-indigo-50 rounded-lg shrink-0 transition-colors">
+                                          {icon}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                          <div className="font-semibold text-slate-900 text-xs truncate group-hover:text-indigo-600 transition-colors" title={att.fileName}>
+                                            {att.fileName}
+                                          </div>
+                                          <div className="text-[10px] text-slate-400 flex items-center space-x-2 mt-0.5">
+                                            <span className="font-bold text-slate-600 bg-slate-100 px-1.5 py-0.2 rounded">
+                                              {formatFileSize(att.fileSize)}
+                                            </span>
+                                            {att.user && <span>• {att.user.fullName}</span>}
+                                            {att.createdAt && (
+                                              <span>• {new Date(att.createdAt).toLocaleDateString('tr-TR')}</span>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center space-x-1 shrink-0 ml-2" onClick={(e) => e.stopPropagation()}>
+                                        <a
+                                          href={att.fileUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="px-2 py-1 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 font-semibold rounded-lg text-[11px] flex items-center space-x-1 transition-colors"
+                                          title="Görüntüle / İndir"
+                                        >
+                                          <Download className="w-3 h-3" />
+                                          <span className="hidden sm:inline">Aç / İndir</span>
+                                        </a>
+                                        {(isAdmin || isProjectModerator || att.userId === currentUser.id) && (
+                                          <button
+                                            onClick={() => handleDeleteAttachment(att.id)}
+                                            className="p-1 text-slate-400 hover:text-red-600 transition-colors"
+                                            title="Sil"
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

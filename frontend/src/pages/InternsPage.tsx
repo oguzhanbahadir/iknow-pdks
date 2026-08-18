@@ -368,14 +368,14 @@ export default function InternsPage({ currentUser }: InternsPageProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2">
-            <h1 className="text-2xl font-bold text-slate-900">Personel Yönetimi & CV Kayıtları</h1>
-            <span className="bg-slate-900 text-white text-xs font-bold px-2 py-0.5 rounded-sm">
-              ADMIN ÖZEL
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Personel Yönetimi & CV Kayıtları</h1>
+            <span className="bg-slate-900 text-white text-xs font-bold px-2 py-0.5 rounded-sm shrink-0">
+              ADMIN
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
@@ -383,7 +383,7 @@ export default function InternsPage({ currentUser }: InternsPageProps) {
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
           {/* View Mode Toggle */}
           <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
             <button
@@ -408,31 +408,31 @@ export default function InternsPage({ currentUser }: InternsPageProps) {
             </button>
           </div>
 
-          <div className="relative">
+          <div className="relative flex-1 sm:flex-initial min-w-[150px]">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <input
               type="text"
-              placeholder="Personel ismi, e-posta veya şirket ara..."
+              placeholder="Personel ara..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-[180px] sm:w-[220px] pl-9 pr-3 h-9 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-600 text-slate-900 shadow-xs"
+              className="w-full sm:w-[200px] pl-9 pr-3 h-9 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-600 text-slate-900 shadow-xs"
             />
           </div>
 
           <button
             onClick={handleOpenInviteModal}
-            className="h-9 bg-white hover:bg-slate-50 text-indigo-600 border border-indigo-200 font-semibold text-xs px-3.5 rounded-xl flex items-center space-x-1.5 transition-colors shadow-xs shrink-0"
+            className="h-9 bg-white hover:bg-slate-50 text-indigo-600 border border-indigo-200 font-semibold text-xs px-3 sm:px-3.5 rounded-xl flex items-center space-x-1.5 transition-colors shadow-xs shrink-0"
           >
             <LinkIcon className="w-4 h-4 text-indigo-600" />
-            <span>Davet Bağlantısı Üret</span>
+            <span>Davet Bağlantısı</span>
           </button>
 
           <button
             onClick={() => setIsAddInternModalOpen(true)}
-            className="h-9 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-4 rounded-xl flex items-center space-x-1.5 transition-colors shadow-xs shrink-0"
+            className="h-9 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-3.5 sm:px-4 rounded-xl flex items-center space-x-1.5 transition-colors shadow-xs shrink-0"
           >
             <UserPlus className="w-4 h-4" />
-            <span>+ Yeni Personel Ekle</span>
+            <span>+ Personel Ekle</span>
           </button>
         </div>
       </div>

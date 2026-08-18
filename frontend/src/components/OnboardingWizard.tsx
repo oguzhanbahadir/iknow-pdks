@@ -240,7 +240,7 @@ export default function OnboardingWizard({ currentUser, onComplete }: Onboarding
 
               <div className="space-y-3">
                 <label className="text-xs font-bold text-slate-700 block">Ana Çalışma Alanı</label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
                   {[
                     'Frontend Geliştirici',
                     'Backend Geliştirici',
@@ -253,7 +253,7 @@ export default function OnboardingWizard({ currentUser, onComplete }: Onboarding
                       key={domain}
                       type="button"
                       onClick={() => setPrimaryDomain(domain)}
-                      className={`p-3.5 rounded-2xl border text-xs font-bold text-left transition-all ${primaryDomain === domain
+                      className={`p-3 sm:p-3.5 rounded-2xl border text-xs font-bold text-left transition-all ${primaryDomain === domain
                           ? 'border-indigo-600 bg-indigo-50/70 text-indigo-900 shadow-xs'
                           : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                         }`}
@@ -261,7 +261,7 @@ export default function OnboardingWizard({ currentUser, onComplete }: Onboarding
                       <div className="flex items-center justify-between">
                         <span>{domain}</span>
                         {primaryDomain === domain && (
-                          <CheckCircle2 className="w-4 h-4 text-indigo-600" />
+                          <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0 ml-1" />
                         )}
                       </div>
                     </button>
@@ -271,7 +271,7 @@ export default function OnboardingWizard({ currentUser, onComplete }: Onboarding
 
               <div className="space-y-3 pt-2">
                 <label className="text-xs font-bold text-slate-700 block">Mevcut Deneyim Seviyeniz</label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
                   {['Başlangıç Seviyesi', 'Orta Seviye', 'İleri Seviye'].map((level) => (
                     <button
                       key={level}
@@ -376,7 +376,7 @@ export default function OnboardingWizard({ currentUser, onComplete }: Onboarding
                 </button>
               </form>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
                 {Array.from(new Set([...AVAILABLE_TOOLS, ...selectedTools])).map((tool) => {
                   const isSelected = selectedTools.includes(tool);
                   return (

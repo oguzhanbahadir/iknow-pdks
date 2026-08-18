@@ -78,35 +78,35 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
   const internsList = users.filter((u) => u.role === 'USER');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Welcome Banner */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center space-x-2">
-            <h1 className="text-2xl font-bold text-slate-900">
+          <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
               Hoş Geldiniz, {currentUser.fullName}!
             </h1>
             {isAdmin ? (
-              <span className="bg-slate-900 text-white text-xs font-bold px-2 py-0.5 rounded-sm">
+              <span className="bg-slate-900 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-sm shrink-0">
                 ADMIN PANELİ
               </span>
             ) : (
-              <span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2 py-0.5 rounded-md">
+              <span className="bg-indigo-100 text-indigo-800 text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-md shrink-0">
                 PERSONEL PANELİ
               </span>
             )}
           </div>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
             {isAdmin
               ? 'Tüm projelerin durumunu, personellerin görev akışını ve aktivitelerini buradan yönetebilirsiniz.'
               : 'Kendi günlük görevlerinizi Kanban panosunda yönetebilir ve dahil olduğunuz projeleri takip edebilirsiniz.'}
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 w-full sm:w-auto shrink-0">
           <Link
             to="/tasks"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-4 py-2.5 rounded-xl flex items-center space-x-2 transition-colors shadow-xs"
+            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm px-4 py-2.5 rounded-xl flex items-center justify-center space-x-2 transition-colors shadow-xs"
           >
             <Plus className="w-4 h-4" />
             <span>Yeni Görev Yaz</span>
@@ -115,18 +115,18 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
       </div>
 
       {/* Metrics Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-xs space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white border border-slate-200 p-4 sm:p-5 rounded-2xl shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               {isAdmin ? 'Toplam Görev Sayısı' : 'Bana Atanan Görevler'}
             </span>
-            <div className="w-9 h-9 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+            <div className="w-9 h-9 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shrink-0">
               <CheckSquare className="w-5 h-5" />
             </div>
           </div>
           <div className="flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-slate-900">{tasks.length}</span>
+            <span className="text-2xl sm:text-3xl font-extrabold text-slate-900">{tasks.length}</span>
             <span className="text-xs text-slate-500">adet görev</span>
           </div>
           <div className="flex items-center justify-between text-xs text-slate-500 border-t border-slate-100 pt-2">
@@ -135,39 +135,39 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-xs space-y-3">
+        <div className="bg-white border border-slate-200 p-4 sm:p-5 rounded-2xl shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               {isAdmin ? 'Aktif Projeler' : 'Dahil Olduğum Projeler'}
             </span>
-            <div className="w-9 h-9 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+            <div className="w-9 h-9 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
               <FolderKanban className="w-5 h-5" />
             </div>
           </div>
           <div className="flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-slate-900">
+            <span className="text-2xl sm:text-3xl font-extrabold text-slate-900">
               {isAdmin ? projects.length : projects.filter((p) => p.canAccessContent).length}
             </span>
             <span className="text-xs text-slate-500">adet proje</span>
           </div>
           <div className="flex items-center justify-between text-xs text-slate-500 border-t border-slate-100 pt-2">
-            <span>Devam Eden: {projects.filter((p) => p.status === 'IN_PROGRESS').length}</span>
-            <span>Planlanan: {projects.filter((p) => p.status === 'PLANNING').length}</span>
+            <span>Devam: {projects.filter((p) => p.status === 'IN_PROGRESS').length}</span>
+            <span>Plan: {projects.filter((p) => p.status === 'PLANNING').length}</span>
           </div>
         </div>
 
         {isAdmin ? (
-          <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-xs space-y-3">
+          <div className="bg-white border border-slate-200 p-4 sm:p-5 rounded-2xl shadow-xs space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                 Kayıtlı Personeller
               </span>
-              <div className="w-9 h-9 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+              <div className="w-9 h-9 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
                 <Users className="w-5 h-5" />
               </div>
             </div>
             <div className="flex items-baseline space-x-2">
-              <span className="text-3xl font-extrabold text-slate-900">{internsList.length}</span>
+              <span className="text-2xl sm:text-3xl font-extrabold text-slate-900">{internsList.length}</span>
               <span className="text-xs text-slate-500">aktif kişi</span>
             </div>
             <p className="text-xs text-slate-500 border-t border-slate-100 pt-2">
@@ -175,17 +175,17 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
             </p>
           </div>
         ) : (
-          <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-xs space-y-3">
+          <div className="bg-white border border-slate-200 p-4 sm:p-5 rounded-2xl shadow-xs space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                 İncelemede Olan
               </span>
-              <div className="w-9 h-9 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
+              <div className="w-9 h-9 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center shrink-0">
                 <TrendingUp className="w-5 h-5" />
               </div>
             </div>
             <div className="flex items-baseline space-x-2">
-              <span className="text-3xl font-extrabold text-slate-900">{inReviewCount}</span>
+              <span className="text-2xl sm:text-3xl font-extrabold text-slate-900">{inReviewCount}</span>
               <span className="text-xs text-slate-500">görev kontrol aşamasında</span>
             </div>
             <p className="text-xs text-slate-500 border-t border-slate-100 pt-2">
@@ -194,17 +194,17 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
           </div>
         )}
 
-        <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-xs space-y-3">
+        <div className="bg-white border border-slate-200 p-4 sm:p-5 rounded-2xl shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Tamamlanma Oranı
             </span>
-            <div className="w-9 h-9 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
+            <div className="w-9 h-9 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center shrink-0">
               <Award className="w-5 h-5" />
             </div>
           </div>
           <div className="flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-slate-900">
+            <span className="text-2xl sm:text-3xl font-extrabold text-slate-900">
               {tasks.length > 0 ? Math.round((doneCount / tasks.length) * 100) : 0}%
             </span>
             <span className="text-xs text-slate-500">başarı oranı</span>
@@ -216,12 +216,12 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
       </div>
 
       {/* Quick Navigation Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4 flex flex-col justify-between">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4 flex flex-col justify-between">
           <div className="space-y-2">
             <div className="flex items-center space-x-2 text-indigo-600 font-bold text-sm">
-              <Kanban className="w-5 h-5" />
-              <span>Görev Panosu & Liste Görünümü</span>
+              <Kanban className="w-5 h-5 shrink-0" />
+              <span>Görev Panosu & Liste</span>
             </div>
             <h3 className="text-base font-semibold text-slate-900">Kanban / Liste Modu</h3>
             <p className="text-xs text-slate-500 leading-relaxed">
@@ -238,15 +238,15 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
         </div>
 
         {isAdmin ? (
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4 flex flex-col justify-between">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4 flex flex-col justify-between">
             <div className="space-y-2">
               <div className="flex items-center space-x-2 text-blue-600 font-bold text-sm">
-                <Users className="w-5 h-5" />
+                <Users className="w-5 h-5 shrink-0" />
                 <span>Personel & CV Yönetimi</span>
               </div>
-              <h3 className="text-base font-semibold text-slate-900">Puanlama ve Şirket Planlaması</h3>
+              <h3 className="text-base font-semibold text-slate-900">Puanlama ve Planlama</h3>
               <p className="text-xs text-slate-500 leading-relaxed">
-                Personellerin teknik/soft skill puanlarını tanımlayın, CV dosyalarını inceleyin ve hangi şirkete entegre olacaklarını not edin.
+                Personellerin teknik/soft skill puanlarını tanımlayın, CV dosyalarını inceleyin ve şirket entegrasyonlarını yapın.
               </p>
             </div>
             <Link
@@ -258,10 +258,10 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
             </Link>
           </div>
         ) : (
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4 flex flex-col justify-between">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4 flex flex-col justify-between">
             <div className="space-y-2">
               <div className="flex items-center space-x-2 text-blue-600 font-bold text-sm">
-                <FileText className="w-5 h-5" />
+                <FileText className="w-5 h-5 shrink-0" />
                 <span>Kendi Görevleriniz</span>
               </div>
               <h3 className="text-base font-semibold text-slate-900">Görev Girişi & Takip</h3>
@@ -279,15 +279,15 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
           </div>
         )}
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4 flex flex-col justify-between">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4 flex flex-col justify-between">
           <div className="space-y-2">
             <div className="flex items-center space-x-2 text-emerald-600 font-bold text-sm">
-              <Clock className="w-5 h-5" />
+              <Clock className="w-5 h-5 shrink-0" />
               <span>Aylık Efor & Analitik</span>
             </div>
             <h3 className="text-base font-semibold text-slate-900">İstatistik Raporları</h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Ay ve yıl filtreli grafiker üzerinde personel bazlı çalışma sürelerini ve toplam efor verimini inceleyin.
+              Ay ve yıl filtreli grafikler üzerinde personel bazlı çalışma sürelerini ve toplam efor verimini inceleyin.
             </p>
           </div>
           <Link
@@ -301,7 +301,7 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
       </div>
 
       {/* Recent Tasks List Preview */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-slate-900">Son Görevler</h2>
           <Link to="/tasks" className="text-xs font-semibold text-indigo-600 hover:underline">
@@ -311,9 +311,9 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
 
         <div className="divide-y divide-slate-100">
           {tasks.slice(0, 5).map((t) => (
-            <div key={t.id} className="py-3 flex items-center justify-between text-sm">
-              <div className="space-y-0.5">
-                <div className="flex items-center space-x-2">
+            <div key={t.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm">
+              <div className="space-y-0.5 min-w-0 flex-1">
+                <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                   <span className="font-semibold text-slate-900">{t.title}</span>
                   <span
                     className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${t.priority === 'HIGH'
@@ -329,9 +329,9 @@ export default function DashboardPage({ currentUser }: DashboardPageProps) {
                 <p className="text-xs text-slate-500 line-clamp-1">{t.description}</p>
               </div>
 
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3 sm:space-x-4 self-end sm:self-auto shrink-0">
                 {t.assignedUser && (
-                  <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+                  <span className="text-xs text-slate-500 font-medium">
                     {t.assignedUser.fullName}
                   </span>
                 )}

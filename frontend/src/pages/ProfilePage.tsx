@@ -380,7 +380,7 @@ export default function ProfilePage({ currentUser, setCurrentUser }: ProfilePage
         </div>
 
         {/* SECTION 2: Uzmanlık Alanı & Deneyim Seviyesi (Onboarding Wizard Kart Stili) */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-5">
+        <div className="bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 shadow-xs space-y-5">
           <div className="flex items-center space-x-2.5 border-b border-slate-100 pb-3">
             <Sparkles className="w-5 h-5 text-indigo-600" />
             <div>
@@ -391,7 +391,7 @@ export default function ProfilePage({ currentUser, setCurrentUser }: ProfilePage
 
           <div className="space-y-3">
             <label className="text-xs font-bold text-slate-700 block">Ana Çalışma Alanı</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
               {DOMAINS.map((domain) => (
                 <button
                   key={domain}
@@ -400,7 +400,7 @@ export default function ProfilePage({ currentUser, setCurrentUser }: ProfilePage
                     setPrimaryDomain(domain);
                     setDepartment(domain);
                   }}
-                  className={`p-3.5 rounded-2xl border text-xs font-bold text-left transition-all flex items-center justify-between ${
+                  className={`p-3 sm:p-3.5 rounded-2xl border text-xs font-bold text-left transition-all flex items-center justify-between ${
                     primaryDomain === domain
                       ? 'border-indigo-600 bg-indigo-50/80 text-indigo-900 shadow-xs'
                       : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50/50'
@@ -415,7 +415,7 @@ export default function ProfilePage({ currentUser, setCurrentUser }: ProfilePage
 
           <div className="space-y-3 pt-2">
             <label className="text-xs font-bold text-slate-700 block">Mevcut Deneyim Seviyeniz</label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
               {EXPERIENCE_LEVELS.map((level) => (
                 <button
                   key={level}

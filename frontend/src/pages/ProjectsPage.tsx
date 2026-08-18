@@ -251,11 +251,11 @@ export default function ProjectsPage({ currentUser }: ProjectsPageProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header & Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center space-x-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center space-x-2">
             <span>Proje Portföyü & Ekip Çalışma Alanı</span>
           </h1>
           <p className="text-xs text-slate-500 mt-1">
@@ -266,7 +266,7 @@ export default function ProjectsPage({ currentUser }: ProjectsPageProps) {
         {isAdmin && (
           <button
             onClick={openCreateProjectModal}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-4 py-2.5 rounded-xl flex items-center space-x-1.5 transition-colors shadow-xs shrink-0"
+            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-4 py-2.5 rounded-xl flex items-center justify-center space-x-1.5 transition-colors shadow-xs shrink-0"
           >
             <Plus className="w-4 h-4" />
             <span>Yeni Proje Oluştur</span>
@@ -275,23 +275,23 @@ export default function ProjectsPage({ currentUser }: ProjectsPageProps) {
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-md">
+      <div className="bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-4 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="relative flex-1 max-w-full sm:max-w-md">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
-            placeholder="Proje adı, açıklama veya rol ara (örn: Frontend, DevOps)..."
+            placeholder="Proje adı, açıklama veya rol ara..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-600 text-slate-900"
           />
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 shrink-0">
           <select
             value={selectedStatusFilter}
             onChange={(e) => setSelectedStatusFilter(e.target.value)}
-            className="bg-slate-50 border border-slate-200 text-slate-800 text-xs font-medium px-3 py-2 rounded-xl focus:outline-none focus:border-indigo-600"
+            className="w-full sm:w-auto bg-slate-50 border border-slate-200 text-slate-800 text-xs font-medium px-3 py-2 rounded-xl focus:outline-none focus:border-indigo-600"
           >
             <option value="ALL">Tüm Proje Durumları</option>
             <option value="PLANNING">Planlama</option>

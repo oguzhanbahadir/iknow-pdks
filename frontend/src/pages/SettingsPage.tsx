@@ -339,10 +339,10 @@ TELEGRAM_CHAT_ID=-100XXXXXXXXXX`;
       </div>
 
       {/* TAB NAVIGATION BAR */}
-      <div className="flex items-center space-x-2 border-b border-slate-200 pb-3 overflow-x-auto">
+      <div className="flex items-center space-x-2 border-b border-slate-200 pb-3 overflow-x-auto whitespace-nowrap">
         <button
           onClick={() => setActiveTab('telegram')}
-          className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all ${
+          className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all shrink-0 ${
             activeTab === 'telegram'
               ? 'bg-indigo-600 text-white shadow-xs'
               : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
@@ -354,7 +354,7 @@ TELEGRAM_CHAT_ID=-100XXXXXXXXXX`;
 
         <button
           onClick={() => setActiveTab('admins')}
-          className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all ${
+          className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all shrink-0 ${
             activeTab === 'admins'
               ? 'bg-indigo-600 text-white shadow-xs'
               : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
@@ -366,7 +366,7 @@ TELEGRAM_CHAT_ID=-100XXXXXXXXXX`;
 
         <button
           onClick={() => setActiveTab('storage')}
-          className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all ${
+          className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all shrink-0 ${
             activeTab === 'storage'
               ? 'bg-indigo-600 text-white shadow-xs'
               : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'

@@ -107,11 +107,11 @@ export default function EffortPage({ currentUser }: EffortPageProps) {
       : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Aylık Efor & İstatistik Analitiği</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Aylık Efor & İstatistik Analitiği</h1>
           <p className="text-xs text-slate-500 mt-1">
             {isAdmin
               ? 'Seçilen ay ve yıl bazında personellerin harcadıkları çalışma saatleri ve görev tamamlama verimliliği.'
@@ -119,7 +119,7 @@ export default function EffortPage({ currentUser }: EffortPageProps) {
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
           {isAdmin && (
             <select
               value={selectedUserId}
@@ -171,7 +171,7 @@ export default function EffortPage({ currentUser }: EffortPageProps) {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-xs space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase">
             <span>Toplam Efor</span>
