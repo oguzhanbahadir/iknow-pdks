@@ -18,6 +18,24 @@ export interface User {
   experienceLevel?: string;
 }
 
+export interface TaskAttachment {
+  id: string;
+  taskId: string;
+  userId?: string;
+  fileName: string;
+  filePath: string;
+  fileUrl: string;
+  fileType: 'image' | 'document';
+  fileSize: number;
+  mimeType?: string;
+  createdAt?: string;
+  user?: {
+    id: string;
+    fullName: string;
+    avatar?: string;
+  };
+}
+
 export interface TaskItem {
   id: string;
   title: string;
@@ -41,6 +59,7 @@ export interface TaskItem {
   archivedAt?: string;
   createdAt?: string;
   commentsCount?: number;
+  attachments?: TaskAttachment[];
   assignedUser?: {
     id: string;
     fullName: string;

@@ -51,4 +51,9 @@ class Task extends Model
     {
         return $this->hasMany(TaskComment::class, 'task_id')->latest();
     }
+
+    public function attachments()
+    {
+        return $this->hasMany(TaskAttachment::class, 'task_id')->latest();
+    }
 }
