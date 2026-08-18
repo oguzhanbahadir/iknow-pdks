@@ -175,6 +175,7 @@ class ProjectController extends Controller
             'createdBy',
             'members.user',
             'tasks.assignedUser',
+            'tasks.attachments.user',
         ])->withCount(['tasks as total_tasks_count', 'tasks as completed_tasks_count' => function ($q) {
             $q->where('status', 'DONE');
         }])->findOrFail($id);
@@ -266,6 +267,25 @@ class ProjectController extends Controller
                         'id' => (string) $t->assignedUser->id,
                         'fullName' => $t->assignedUser->full_name,
                     ] : null,
+                    'attachments' => $t->attachments ? $t->attachments->map(function ($att) {
+                        return [
+                            'id' => (string) $att->id,
+                            'taskId' => (string) $att->task_id,
+                            'userId' => $att->user_id ? (string) $att->user_id : null,
+                            'fileName' => $att->file_name,
+                            'filePath' => $att->file_path,
+                            'fileUrl' => $att->file_url,
+                            'fileType' => $att->file_type,
+                            'fileSize' => (int) $att->file_size,
+                            'mimeType' => $att->mime_type,
+                            'createdAt' => $att->created_at ? $att->created_at->toISOString() : null,
+                            'user' => $att->user ? [
+                                'id' => (string) $att->user->id,
+                                'fullName' => $att->user->full_name,
+                                'avatar' => $att->user->avatar,
+                            ] : null,
+                        ];
+                    })->values() : [],
                 ];
             })->values() : [],
         ];
