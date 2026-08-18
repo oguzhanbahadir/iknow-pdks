@@ -56,4 +56,20 @@ class Task extends Model
     {
         return $this->hasMany(TaskAttachment::class, 'task_id')->latest();
     }
+
+    protected static function booted()
+    {
+        static::deleting(function ($task) {
+            // Delete all associated attachments and physical files on disk
+            foreach ($task->attachments as $attachment) {
+                if ($attachment->file_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($attachment->file_path)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($attachment->file_path);
+                }
+                $attachment->delete();
+            }
+
+            // Delete associated comments
+            $task->comments()->delete();
+        });
+    }
 }

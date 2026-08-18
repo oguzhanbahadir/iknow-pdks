@@ -44,4 +44,14 @@ class Project extends Model
     {
         return $this->hasMany(Task::class, 'project_id');
     }
+
+    protected static function booted()
+    {
+        static::deleting(function ($project) {
+            foreach ($project->tasks as $task) {
+                $task->delete();
+            }
+            $project->members()->delete();
+        });
+    }
 }
