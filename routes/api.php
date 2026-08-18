@@ -30,6 +30,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/tasks/{id}/unarchive', [TaskController::class, 'unarchive']);
     Route::get('/tasks/{id}/comments', [TaskController::class, 'getComments']);
     Route::post('/tasks/{id}/comments', [TaskController::class, 'storeComment']);
+    Route::post('/tasks/{id}/attachments', [TaskController::class, 'uploadAttachment']);
+    Route::delete('/tasks/{id}/attachments/{attachmentId}', [TaskController::class, 'deleteAttachment']);
 
     Route::get('/interns', [InternController::class, 'index']);
     Route::post('/interns/create', [InternController::class, 'createManual']);

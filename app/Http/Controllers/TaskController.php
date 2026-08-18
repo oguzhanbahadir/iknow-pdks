@@ -4,25 +4,30 @@ namespace App\Http\Controllers;
 
 use App\Models\ProjectLog;
 use App\Models\Task;
+use App\Models\TaskAttachment;
 use App\Models\TaskComment;
 use App\Models\User;
+use App\Services\ImageOptimizerService;
 use App\Services\TelegramService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class TaskController extends Controller
 {
     protected TelegramService $telegramService;
+    protected ImageOptimizerService $imageOptimizerService;
 
-    public function __construct(TelegramService $telegramService)
+    public function __construct(TelegramService $telegramService, ImageOptimizerService $imageOptimizerService)
     {
         $this->telegramService = $telegramService;
+        $this->imageOptimizerService = $imageOptimizerService;
     }
 
     public function index(Request $request)
     {
         $user = $request->user();
 
-        $query = Task::with(['assignedUser', 'createdBy', 'project:id,name'])->withCount('comments');
+        $query = Task::with(['assignedUser', 'createdBy', 'project:id,name', 'attachments.user'])->withCount('comments');
 
         if ($request->has('project_id') && !empty($request->project_id)) {
             $query->where('project_id', $request->project_id);
@@ -61,6 +66,25 @@ class TaskController extends Controller
                     'fullName' => $t->assignedUser->full_name,
                     'email' => $t->assignedUser->email,
                 ] : null,
+                'attachments' => $t->attachments ? $t->attachments->map(function ($att) {
+                    return [
+                        'id' => (string) $att->id,
+                        'taskId' => (string) $att->task_id,
+                        'userId' => $att->user_id ? (string) $att->user_id : null,
+                        'fileName' => $att->file_name,
+                        'filePath' => $att->file_path,
+                        'fileUrl' => $att->file_url,
+                        'fileType' => $att->file_type,
+                        'fileSize' => (int) $att->file_size,
+                        'mimeType' => $att->mime_type,
+                        'createdAt' => $att->created_at ? $att->created_at->toISOString() : null,
+                        'user' => $att->user ? [
+                            'id' => (string) $att->user->id,
+                            'fullName' => $att->user->full_name,
+                            'avatar' => $att->user->avatar,
+                        ] : null,
+                    ];
+                })->values() : [],
             ];
         });
 
@@ -466,5 +490,154 @@ class TaskController extends Controller
         ]);
 
         return response()->json(['success' => true, 'task' => $task]);
+    }
+
+    public function uploadAttachment(Request $request, $id)
+    {
+        $task = Task::findOrFail($id);
+        $actor = $request->user();
+
+        if ($task->project_id && $actor && $actor->role !== 'ADMIN') {
+            $membership = \App\Models\ProjectMember::where('project_id', $task->project_id)->where('user_id', $actor->id)->first();
+            if ($membership && $membership->member_role === 'SPECTATOR') {
+                return response()->json(['error' => 'Gözlemci (Spectator) yetkisine sahip kullanıcılar göreve ek yükleyemez.'], 403);
+            }
+        }
+
+        $request->validate([
+            'file' => 'required|file|max:20480', // raw max limit 20MB for images before optimization
+        ], [
+            'file.required' => 'Lütfen yüklenecek bir görsel veya belge seçin.',
+        ]);
+
+        $file = $request->file('file');
+        $originalName = $file->getClientOriginalName();
+        $ext = strtolower($file->getClientOriginalExtension());
+        $mime = $file->getClientMimeType() ?: $file->getMimeType();
+
+        $imageExtensions = ['jpg', 'jpeg', 'png'];
+        $docExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'csv'];
+
+        if (!in_array($ext, array_merge($imageExtensions, $docExtensions))) {
+            return response()->json([
+                'error' => 'Geçersiz dosya türü. Yalnızca JPG, PNG görseller veya PDF, Word, Excel, TXT, CSV belgeleri yükleyebilirsiniz.'
+            ], 422);
+        }
+
+        if (in_array($ext, $imageExtensions)) {
+            // Process and optimize image with Imagick -> WebP (50-100 KB max target)
+            $result = $this->imageOptimizerService->optimizeAndStoreImage($file, 'task_attachments');
+            $filePath = $result['path'];
+            $fileSize = $result['size'];
+            $fileType = 'image';
+            $mimeType = 'image/webp';
+            $fileName = $originalName;
+        } else {
+            // Document validation: strict max 200 KB
+            $rawSize = $file->getSize();
+            $maxDocBytes = 200 * 1024; // 200 KB = 204,800 bytes
+            if ($rawSize > $maxDocBytes) {
+                $sizeKb = round($rawSize / 1024, 1);
+                return response()->json([
+                    'error' => "Belge dosya boyutu maksimum 200 KB olabilir. (Yüklemeye çalıştığınız dosya: {$sizeKb} KB). Lütfen daha küçük bir belge seçin."
+                ], 422);
+            }
+
+            $filePath = $file->store('task_attachments', 'public');
+            $fileSize = $rawSize;
+            $fileType = 'document';
+            $mimeType = $mime;
+            $fileName = $originalName;
+        }
+
+        $attachment = TaskAttachment::create([
+            'task_id' => $task->id,
+            'user_id' => $actor ? $actor->id : null,
+            'file_name' => $fileName,
+            'file_path' => $filePath,
+            'file_type' => $fileType,
+            'file_size' => $fileSize,
+            'mime_type' => $mimeType,
+        ]);
+
+        $attachment->load('user');
+
+        // Audit Log
+        ProjectLog::create([
+            'project_id' => $task->project_id,
+            'task_id' => $task->id,
+            'user_id' => $actor ? $actor->id : $task->assigned_user_id,
+            'action' => 'ATTACHMENT_ADDED',
+            'title' => "'{$task->title}' görevine yeni bir {$fileType} ({$fileName}) eklendi.",
+            'details' => [
+                'task_title' => $task->title,
+                'file_name' => $fileName,
+                'file_type' => $fileType,
+                'file_size' => $fileSize,
+            ],
+            'ip_address' => $request->ip(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'attachment' => [
+                'id' => (string) $attachment->id,
+                'taskId' => (string) $attachment->task_id,
+                'userId' => $attachment->user_id ? (string) $attachment->user_id : null,
+                'fileName' => $attachment->file_name,
+                'filePath' => $attachment->file_path,
+                'fileUrl' => $attachment->file_url,
+                'fileType' => $attachment->file_type,
+                'fileSize' => (int) $attachment->file_size,
+                'mimeType' => $attachment->mime_type,
+                'createdAt' => $attachment->created_at ? $attachment->created_at->toISOString() : null,
+                'user' => $attachment->user ? [
+                    'id' => (string) $attachment->user->id,
+                    'fullName' => $attachment->user->full_name,
+                    'avatar' => $attachment->user->avatar,
+                ] : null,
+            ]
+        ], 201);
+    }
+
+    public function deleteAttachment(Request $request, $id, $attachmentId)
+    {
+        $task = Task::findOrFail($id);
+        $attachment = TaskAttachment::where('task_id', $task->id)->where('id', $attachmentId)->firstOrFail();
+        $actor = $request->user();
+
+        if ($task->project_id && $actor && $actor->role !== 'ADMIN') {
+            $membership = \App\Models\ProjectMember::where('project_id', $task->project_id)->where('user_id', $actor->id)->first();
+            if ($membership && $membership->member_role === 'SPECTATOR') {
+                return response()->json(['error' => 'Gözlemci (Spectator) yetkisine sahip kullanıcılar göreve ait ekleri silemez.'], 403);
+            }
+            if ($attachment->user_id && $attachment->user_id !== $actor->id && $actor->role !== 'ADMIN') {
+                return response()->json(['error' => 'Yalnızca kendi yüklediğiniz ekleri veya sistem yöneticisi olarak silebilirsiniz.'], 403);
+            }
+        }
+
+        // Delete physical file from public disk
+        if ($attachment->file_path && Storage::disk('public')->exists($attachment->file_path)) {
+            Storage::disk('public')->delete($attachment->file_path);
+        }
+
+        $fileName = $attachment->file_name;
+        $attachment->delete();
+
+        // Audit Log
+        ProjectLog::create([
+            'project_id' => $task->project_id,
+            'task_id' => $task->id,
+            'user_id' => $actor ? $actor->id : 1,
+            'action' => 'ATTACHMENT_DELETED',
+            'title' => "'{$task->title}' görevinden '{$fileName}' eki silindi.",
+            'details' => [
+                'task_title' => $task->title,
+                'file_name' => $fileName,
+            ],
+            'ip_address' => $request->ip(),
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }
